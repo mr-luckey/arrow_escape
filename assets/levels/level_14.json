@@ -1,0 +1,150 @@
+{
+  "id": 14,
+  "name": "Coffee Sip",
+  "difficulty": "medium",
+  "rows": 8,
+  "cols": 7,
+  "hearts": 3,
+  "arrows": [
+    {
+      "id": "a1",
+      "path": [
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "direction": "L",
+      "colorIndex": 0
+    },
+    {
+      "id": "a2",
+      "path": [
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ]
+      ],
+      "direction": "R",
+      "colorIndex": 1
+    },
+    {
+      "id": "a3",
+      "path": [
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          5
+        ]
+      ],
+      "direction": "L",
+      "colorIndex": 2
+    },
+    {
+      "id": "a4",
+      "path": [
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "direction": "R",
+      "colorIndex": 3
+    },
+    {
+      "id": "a5",
+      "path": [
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 4
+    },
+    {
+      "id": "a6",
+      "path": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 5
+    },
+    {
+      "id": "a7",
+      "path": [
+        [
+          6,
+          0
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ]
+      ],
+      "direction": "R",
+      "colorIndex": 0
+    },
+    {
+      "id": "a8",
+      "path": [
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          4
+        ]
+      ],
+      "direction": "L",
+      "colorIndex": 1
+    }
+  ]
+}

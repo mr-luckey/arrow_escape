@@ -1,0 +1,116 @@
+{
+  "id": 11,
+  "name": "Spiral Seed",
+  "difficulty": "medium",
+  "rows": 6,
+  "cols": 6,
+  "hearts": 3,
+  "arrows": [
+    {
+      "id": "a1",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "direction": "D",
+      "colorIndex": 0
+    },
+    {
+      "id": "a2",
+      "path": [
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "direction": "L",
+      "colorIndex": 1
+    },
+    {
+      "id": "a3",
+      "path": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ]
+      ],
+      "direction": "L",
+      "colorIndex": 2
+    },
+    {
+      "id": "a4",
+      "path": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 3
+    },
+    {
+      "id": "a5",
+      "path": [
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      "direction": "D",
+      "colorIndex": 4
+    },
+    {
+      "id": "a6",
+      "path": [
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ]
+      ],
+      "direction": "L",
+      "colorIndex": 5
+    }
+  ]
+}

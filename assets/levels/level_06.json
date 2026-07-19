@@ -1,0 +1,97 @@
+{
+  "id": 6,
+  "name": "Happy Face",
+  "difficulty": "easy",
+  "rows": 6,
+  "cols": 6,
+  "hearts": 3,
+  "arrows": [
+    {
+      "id": "a1",
+      "path": [
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 0
+    },
+    {
+      "id": "a2",
+      "path": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ]
+      ],
+      "direction": "D",
+      "colorIndex": 1
+    },
+    {
+      "id": "a3",
+      "path": [
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 2
+    },
+    {
+      "id": "a4",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "direction": "L",
+      "colorIndex": 3
+    },
+    {
+      "id": "a5",
+      "path": [
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "direction": "D",
+      "colorIndex": 4
+    }
+  ]
+}

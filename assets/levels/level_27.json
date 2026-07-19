@@ -1,0 +1,243 @@
+{
+  "id": 27,
+  "name": "Palace Gate",
+  "difficulty": "hard",
+  "rows": 10,
+  "cols": 9,
+  "hearts": 3,
+  "arrows": [
+    {
+      "id": "a1",
+      "path": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ]
+      ],
+      "direction": "L",
+      "colorIndex": 0
+    },
+    {
+      "id": "a2",
+      "path": [
+        [
+          7,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          2
+        ]
+      ],
+      "direction": "L",
+      "colorIndex": 1
+    },
+    {
+      "id": "a3",
+      "path": [
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ]
+      ],
+      "direction": "D",
+      "colorIndex": 2
+    },
+    {
+      "id": "a4",
+      "path": [
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ]
+      ],
+      "direction": "R",
+      "colorIndex": 3
+    },
+    {
+      "id": "a5",
+      "path": [
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          5,
+          0
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 4
+    },
+    {
+      "id": "a6",
+      "path": [
+        [
+          0,
+          7
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 5
+    },
+    {
+      "id": "a7",
+      "path": [
+        [
+          7,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          8
+        ]
+      ],
+      "direction": "D",
+      "colorIndex": 0
+    },
+    {
+      "id": "a8",
+      "path": [
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          9,
+          1
+        ]
+      ],
+      "direction": "L",
+      "colorIndex": 1
+    },
+    {
+      "id": "a9",
+      "path": [
+        [
+          5,
+          8
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          5,
+          7
+        ]
+      ],
+      "direction": "R",
+      "colorIndex": 2
+    },
+    {
+      "id": "a10",
+      "path": [
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      "direction": "D",
+      "colorIndex": 3
+    },
+    {
+      "id": "a11",
+      "path": [
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          7,
+          0
+        ]
+      ],
+      "direction": "L",
+      "colorIndex": 4
+    }
+  ]
+}

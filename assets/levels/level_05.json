@@ -1,0 +1,82 @@
+{
+  "id": 5,
+  "name": "Zigzag Mini",
+  "difficulty": "easy",
+  "rows": 5,
+  "cols": 6,
+  "hearts": 3,
+  "arrows": [
+    {
+      "id": "a1",
+      "path": [
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 0
+    },
+    {
+      "id": "a2",
+      "path": [
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 1
+    },
+    {
+      "id": "a3",
+      "path": [
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 2
+    },
+    {
+      "id": "a4",
+      "path": [
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "direction": "R",
+      "colorIndex": 3
+    }
+  ]
+}

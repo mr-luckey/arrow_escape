@@ -1,0 +1,131 @@
+{
+  "id": 12,
+  "name": "Paw Toe",
+  "difficulty": "medium",
+  "rows": 7,
+  "cols": 7,
+  "hearts": 3,
+  "arrows": [
+    {
+      "id": "a1",
+      "path": [
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 0
+    },
+    {
+      "id": "a2",
+      "path": [
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ]
+      ],
+      "direction": "R",
+      "colorIndex": 1
+    },
+    {
+      "id": "a3",
+      "path": [
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 2
+    },
+    {
+      "id": "a4",
+      "path": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "direction": "R",
+      "colorIndex": 3
+    },
+    {
+      "id": "a5",
+      "path": [
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "direction": "R",
+      "colorIndex": 4
+    },
+    {
+      "id": "a6",
+      "path": [
+        [
+          6,
+          4
+        ],
+        [
+          5,
+          4
+        ]
+      ],
+      "direction": "R",
+      "colorIndex": 5
+    },
+    {
+      "id": "a7",
+      "path": [
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "direction": "D",
+      "colorIndex": 0
+    }
+  ]
+}

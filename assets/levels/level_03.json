@@ -1,0 +1,74 @@
+{
+  "id": 3,
+  "name": "Crossroads",
+  "difficulty": "easy",
+  "rows": 5,
+  "cols": 5,
+  "hearts": 3,
+  "arrows": [
+    {
+      "id": "a1",
+      "path": [
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "direction": "R",
+      "colorIndex": 0
+    },
+    {
+      "id": "a2",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "direction": "D",
+      "colorIndex": 1
+    },
+    {
+      "id": "a3",
+      "path": [
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 2
+    },
+    {
+      "id": "a4",
+      "path": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "direction": "U",
+      "colorIndex": 3
+    }
+  ]
+}
