@@ -37,4 +37,5 @@ flutter:
     - assets/levels/
     - assets/images/
     - assets/images/backgrounds/
+    - assets/images/brand/
     - assets/audio/

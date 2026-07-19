@@ -63,6 +63,14 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     children: [
                       const Spacer(flex: 3),
+                      const AppBrandLogo(size: 108)
+                          .animate()
+                          .fadeIn(duration: 450.ms)
+                          .scale(
+                            begin: const Offset(0.86, 0.86),
+                            curve: Curves.easeOutBack,
+                          ),
+                      const SizedBox(height: 16),
                       Text(
                         'ColorPath Out',
                         textAlign: TextAlign.center,

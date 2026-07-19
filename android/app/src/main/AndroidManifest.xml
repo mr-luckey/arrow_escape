@@ -4,7 +4,8 @@
     <application
         android:label="ColorPath Out"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round">
         <!-- Google sample AdMob App ID (example ads only). -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"

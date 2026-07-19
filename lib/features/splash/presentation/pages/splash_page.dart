@@ -18,7 +18,7 @@ class SplashPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.arrow_outward_rounded, size: 88, color: colors.primary)
+              const AppBrandLogo(size: 112)
                   .animate()
                   .scale(duration: 600.ms, curve: Curves.elasticOut)
                   .fadeIn(),

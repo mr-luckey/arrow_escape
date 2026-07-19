@@ -56,11 +56,7 @@ class _RateAppCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.star_rounded,
-                size: 56,
-                color: colors.accent,
-              )
+              const AppBrandLogo(size: 72)
                   .animate()
                   .scale(duration: 400.ms, curve: Curves.elasticOut),
               const SizedBox(height: 12),

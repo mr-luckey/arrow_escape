@@ -4,6 +4,33 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme_extension.dart';
 
+/// Brand asset paths for ColorPath Out.
+abstract final class BrandAssets {
+  /// Official logo (transparent around the icon) — use everywhere in-app.
+  static const logo = 'assets/images/brand/app_logo.png';
+}
+
+/// Official ColorPath Out logo (transparent background, unchanged art).
+class AppBrandLogo extends StatelessWidget {
+  const AppBrandLogo({
+    super.key,
+    this.size = 96,
+  });
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      BrandAssets.logo,
+      width: size,
+      height: size,
+      filterQuality: FilterQuality.high,
+      gaplessPlayback: true,
+    );
+  }
+}
+
 class GradientBackground extends StatelessWidget {
   const GradientBackground({super.key, required this.child});
 
