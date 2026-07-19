@@ -67,15 +67,15 @@
       "id": "a4",
       "path": [
         [
-          0,
+          1,
           0
         ],
         [
-          1,
+          0,
           0
         ]
       ],
-      "direction": "L",
+      "direction": "U",
       "colorIndex": 3
     },
     {

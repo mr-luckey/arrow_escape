@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -40,8 +39,8 @@ class GameBoard extends StatelessWidget {
         final maxW = constraints.maxWidth;
         final maxH = constraints.maxHeight;
         final aspect = cols / rows;
-        double width = maxW;
-        double height = width / aspect;
+        var width = maxW;
+        var height = width / aspect;
         if (height > maxH) {
           height = maxH;
           width = height * aspect;
@@ -87,15 +86,24 @@ class GameBoard extends StatelessWidget {
   String? _hitTest(Offset pos, Size boardSize) {
     final cellW = boardSize.width / cols;
     final cellH = boardSize.height / rows;
+    // Slightly generous hit for thin strokes.
     final row = (pos.dy / cellH).floor();
     final col = (pos.dx / cellW).floor();
     if (row < 0 || col < 0 || row >= rows || col >= cols) return null;
+
+    String? best;
+    var bestDist = double.infinity;
     for (final arrow in arrows) {
-      if (arrow.path.any((c) => c.row == row && c.col == col)) {
-        return arrow.id;
+      for (final c in arrow.path) {
+        final center = Offset((c.col + 0.5) * cellW, (c.row + 0.5) * cellH);
+        final d = (pos - center).distance;
+        if (d < bestDist && d < math.min(cellW, cellH) * 0.55) {
+          bestDist = d;
+          best = arrow.id;
+        }
       }
     }
-    return null;
+    return best;
   }
 }
 
@@ -120,42 +128,44 @@ class BoardPainter extends CustomPainter {
   final String? removedArrowId;
   final double exitProgress;
 
+  double _stroke(double cellW, double cellH) =>
+      (math.min(cellW, cellH) * 0.11).clamp(2.2, 4.2);
+
   @override
   void paint(Canvas canvas, Size size) {
     final cellW = size.width / cols;
     final cellH = size.height / rows;
 
-    final bg = Paint()..color = const Color(0xFFFFFFF8);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(0, 0, size.width, size.height),
         const Radius.circular(24),
       ),
-      bg,
+      Paint()..color = const Color(0xFFFFFFF8),
     );
 
-    final border = Paint()
-      ..color = const Color(0xFFE2EEF5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(1.5, 1.5, size.width - 3, size.height - 3),
         const Radius.circular(24),
       ),
-      border,
+      Paint()
+        ..color = const Color(0xFFE2EEF5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
     );
 
+    // Very subtle grid — screenshots are mostly clean.
     final grid = Paint()
-      ..color = const Color(0x10000000)
-      ..strokeWidth = 1;
+      ..color = const Color(0x08000000)
+      ..strokeWidth = 0.8;
     for (var r = 1; r < rows; r++) {
       final y = r * cellH;
-      canvas.drawLine(Offset(12, y), Offset(size.width - 12, y), grid);
+      canvas.drawLine(Offset(10, y), Offset(size.width - 10, y), grid);
     }
     for (var c = 1; c < cols; c++) {
       final x = c * cellW;
-      canvas.drawLine(Offset(x, 12), Offset(x, size.height - 12), grid);
+      canvas.drawLine(Offset(x, 10), Offset(x, size.height - 10), grid);
     }
 
     for (final arrow in arrows) {
@@ -166,12 +176,12 @@ class BoardPainter extends CustomPainter {
   Offset _cellCenter(Cell c, double cellW, double cellH) =>
       Offset((c.col + 0.5) * cellW, (c.row + 0.5) * cellH);
 
-  /// Continuous rail: body cells (tail → head) then exit lane off the board.
   List<Offset> _buildRail(ArrowEntity arrow, double cellW, double cellH) {
     final rail = [
       for (final c in arrow.path) _cellCenter(c, cellW, cellH),
     ];
-    final (dr, dc) = arrow.direction.delta;
+    // Always extend using tipDirection so exit matches painted head.
+    final (dr, dc) = arrow.tipDirection.delta;
     final extend = arrow.path.length + math.max(rows, cols) + 3;
     var tip = rail.last;
     for (var i = 0; i < extend; i++) {
@@ -181,7 +191,6 @@ class BoardPainter extends CustomPainter {
     return rail;
   }
 
-  /// Sample a point along rail where [index] is in cell units (can be fractional).
   Offset _sampleRail(List<Offset> rail, double index) {
     if (rail.isEmpty) return Offset.zero;
     if (index <= 0) return rail.first;
@@ -196,7 +205,6 @@ class BoardPainter extends CustomPainter {
     return Offset.lerp(rail[i], rail[i + 1], t)!;
   }
 
-  /// Vertices of the arrow after sliding [travel] cell-units along its rail.
   List<Offset> _slidingPoints(
     ArrowEntity arrow,
     double cellW,
@@ -210,6 +218,43 @@ class BoardPainter extends CustomPainter {
     ];
   }
 
+  /// Rounded corners like Arrow Wave / Arrow GO thin paths.
+  Path _smoothPath(List<Offset> points, double radius) {
+    final path = Path();
+    if (points.isEmpty) return path;
+    if (points.length == 1) {
+      path.addOval(Rect.fromCircle(center: points.first, radius: 1));
+      return path;
+    }
+    if (points.length == 2) {
+      path.moveTo(points[0].dx, points[0].dy);
+      path.lineTo(points[1].dx, points[1].dy);
+      return path;
+    }
+
+    path.moveTo(points.first.dx, points.first.dy);
+    for (var i = 1; i < points.length - 1; i++) {
+      final prev = points[i - 1];
+      final curr = points[i];
+      final next = points[i + 1];
+      final toPrev = prev - curr;
+      final toNext = next - curr;
+      final dPrev = toPrev.distance;
+      final dNext = toNext.distance;
+      if (dPrev < 0.001 || dNext < 0.001) {
+        path.lineTo(curr.dx, curr.dy);
+        continue;
+      }
+      final r = math.min(radius, math.min(dPrev, dNext) * 0.45);
+      final p1 = curr + toPrev / dPrev * r;
+      final p2 = curr + toNext / dNext * r;
+      path.lineTo(p1.dx, p1.dy);
+      path.quadraticBezierTo(curr.dx, curr.dy, p2.dx, p2.dy);
+    }
+    path.lineTo(points.last.dx, points.last.dy);
+    return path;
+  }
+
   void _paintArrow(
     Canvas canvas,
     ArrowEntity arrow,
@@ -220,8 +265,9 @@ class BoardPainter extends CustomPainter {
     final isHint = arrow.id == hintArrowId;
     final isFailed = arrow.id == failedArrowId;
     final isExiting = arrow.id == removedArrowId && exitProgress > 0;
+    final stroke = _stroke(cellW, cellH);
+    final tipDir = arrow.tipDirection;
 
-    // Pull-out: every vertex advances along the polyline rail (snakes through bends).
     final travel = isExiting
         ? exitProgress * (arrow.path.length + math.max(rows, cols) + 2)
         : 0.0;
@@ -229,76 +275,77 @@ class BoardPainter extends CustomPainter {
         ? _slidingPoints(arrow, cellW, cellH, travel)
         : [for (final c in arrow.path) _cellCenter(c, cellW, cellH)];
 
-    if (points.length < 2 && points.isEmpty) return;
+    if (points.isEmpty) return;
 
-    // Fade as it clears the board.
-    final opacity = isExiting ? (1.0 - exitProgress * 0.35).clamp(0.35, 1.0) : 1.0;
-
-    final path = Path()..moveTo(points.first.dx, points.first.dy);
-    for (var i = 1; i < points.length; i++) {
-      path.lineTo(points[i].dx, points[i].dy);
-    }
+    final opacity =
+        isExiting ? (1.0 - exitProgress * 0.25).clamp(0.4, 1.0) : 1.0;
+    final path = _smoothPath(points, math.min(cellW, cellH) * 0.28);
+    final strokeColor =
+        (isFailed ? const Color(0xFFFF3B3B) : color).withValues(alpha: opacity);
 
     if (isHint && !isExiting) {
       canvas.drawPath(
         path,
         Paint()
-          ..color = color.withValues(alpha: 0.45)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14)
+          ..color = color.withValues(alpha: 0.35)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = cellW * 0.55
-          ..strokeCap = StrokeCap.round,
+          ..strokeWidth = stroke * 2.2
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
       );
     }
 
+    // Soft shadow under thin line (Arrow GO style lift).
     canvas.drawPath(
       path,
       Paint()
-        ..color = color.withValues(alpha: 0.28 * opacity)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)
+        ..color = Colors.black.withValues(alpha: 0.06 * opacity)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = cellW * 0.48
-        ..strokeCap = StrokeCap.round,
+        ..strokeWidth = stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2),
     );
 
-    final strokeColor = (isFailed ? const Color(0xFFFF3B3B) : color)
-        .withValues(alpha: opacity);
     canvas.drawPath(
       path,
       Paint()
         ..color = strokeColor
         ..style = PaintingStyle.stroke
-        ..strokeWidth = cellW * 0.4
+        ..strokeWidth = stroke
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round,
     );
 
-    // Arrowhead oriented along current travel direction (last segment).
+    // Arrowhead always matches tip / exit direction (not a mismatched visual).
+    final (dr, dc) = tipDir.delta;
     final head = points.last;
+    // While exiting through bends mid-path, prefer tipDir once past body,
+    // else follow last drawn segment so head stays aligned on the line.
     Offset heading;
-    if (points.length >= 2) {
-      heading = points.last - points[points.length - 2];
+    if (isExiting && points.length >= 2) {
+      final seg = points.last - points[points.length - 2];
+      heading = seg.distance > 0.001
+          ? seg
+          : Offset(dc * cellW, dr * cellH);
     } else {
-      final (dr, dc) = arrow.direction.delta;
-      heading = Offset(dc.toDouble(), dr.toDouble());
-    }
-    final len = heading.distance;
-    if (len < 0.001) {
-      final (dr, dc) = arrow.direction.delta;
       heading = Offset(dc * cellW, dr * cellH);
     }
+
     final nx = heading.dx / heading.distance;
     final ny = heading.dy / heading.distance;
-    final tip = Offset(head.dx + nx * cellW * 0.4, head.dy + ny * cellH * 0.4);
-    final px = -ny;
-    final py = nx;
+    final headLen = stroke * 2.4;
+    final headWidth = stroke * 2.0;
+    final tip = Offset(head.dx + nx * headLen, head.dy + ny * headLen);
+    final base = Offset(head.dx - nx * stroke * 0.15, head.dy - ny * stroke * 0.15);
     final left = Offset(
-      head.dx + px * cellW * 0.3 - nx * cellW * 0.02,
-      head.dy + py * cellH * 0.3 - ny * cellH * 0.02,
+      base.dx - ny * headWidth,
+      base.dy + nx * headWidth,
     );
     final right = Offset(
-      head.dx - px * cellW * 0.3 - nx * cellW * 0.02,
-      head.dy - py * cellH * 0.3 - ny * cellH * 0.02,
+      base.dx + ny * headWidth,
+      base.dy - nx * headWidth,
     );
 
     final headPath = Path()
@@ -308,35 +355,13 @@ class BoardPainter extends CustomPainter {
       ..close();
     canvas.drawPath(headPath, Paint()..color = strokeColor);
 
-    // Tail nub only while mostly still on the board.
-    if (!isExiting || exitProgress < 0.85) {
+    // Tiny tail dot like reference apps (subtle, not chunky).
+    if (!isExiting || exitProgress < 0.7) {
       canvas.drawCircle(
         points.first,
-        cellW * 0.15,
-        Paint()..color = Colors.white.withValues(alpha: 0.9 * opacity),
-      );
-      canvas.drawCircle(
-        points.first,
-        cellW * 0.1,
+        stroke * 0.55,
         Paint()..color = strokeColor,
       );
-    }
-
-    // Soft motion streak while exiting.
-    if (isExiting && exitProgress > 0.05 && points.length >= 2) {
-      final streak = Paint()
-        ..shader = ui.Gradient.linear(
-          points.first,
-          points.last,
-          [
-            strokeColor.withValues(alpha: 0),
-            strokeColor.withValues(alpha: 0.2),
-          ],
-        )
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = cellW * 0.22
-        ..strokeCap = StrokeCap.round;
-      canvas.drawPath(path, streak);
     }
   }
 

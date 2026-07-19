@@ -75,15 +75,15 @@
       "id": "a4",
       "path": [
         [
-          5,
+          4,
           4
         ],
         [
-          4,
+          5,
           4
         ]
       ],
-      "direction": "R",
+      "direction": "D",
       "colorIndex": 3
     },
     {

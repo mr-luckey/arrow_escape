@@ -24,6 +24,17 @@ extension DirectionX on Direction {
         Direction.left => (0, -1),
         Direction.right => (0, 1),
       };
+
+  /// Direction of travel from [from] → [to] for orthogonal neighbors.
+  static Direction? between(Cell from, Cell to) {
+    final dr = to.row - from.row;
+    final dc = to.col - from.col;
+    if (dr == -1 && dc == 0) return Direction.up;
+    if (dr == 1 && dc == 0) return Direction.down;
+    if (dr == 0 && dc == -1) return Direction.left;
+    if (dr == 0 && dc == 1) return Direction.right;
+    return null;
+  }
 }
 
 class Cell extends Equatable {
@@ -60,6 +71,19 @@ class ArrowEntity extends Equatable {
 
   Cell get head => path.last;
   Cell get tail => path.first;
+
+  /// Exit direction must match the last body segment (tip orientation).
+  Direction get tipDirection {
+    if (path.length < 2) return direction;
+    return DirectionX.between(path[path.length - 2], path.last) ?? direction;
+  }
+
+  /// Ensures stored [direction] matches the painted tip.
+  ArrowEntity normalized() {
+    final tip = tipDirection;
+    if (tip == direction) return this;
+    return copyWith(direction: tip);
+  }
 
   ArrowEntity copyWith({
     String? id,

@@ -79,6 +79,6 @@ class ArrowModel {
       path: path.map((p) => Cell(p[0], p[1])).toList(),
       direction: DirectionX.fromCode(direction),
       colorIndex: colorIndex,
-    );
+    ).normalized();
   }
 }

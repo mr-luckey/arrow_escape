@@ -17,13 +17,13 @@ class CanEscapeUseCase {
       occupied.addAll(other.path);
     }
 
-    var cursor = arrow.head.step(arrow.direction);
+    var cursor = arrow.head.step(arrow.tipDirection);
     while (cursor.row >= 0 &&
         cursor.row < rows &&
         cursor.col >= 0 &&
         cursor.col < cols) {
       if (occupied.contains(cursor)) return false;
-      cursor = cursor.step(arrow.direction);
+      cursor = cursor.step(arrow.tipDirection);
     }
     return true;
   }

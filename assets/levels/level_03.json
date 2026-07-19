@@ -59,15 +59,15 @@
       "id": "a4",
       "path": [
         [
-          1,
-          1
+          4,
+          2
         ],
         [
-          1,
-          2
+          4,
+          1
         ]
       ],
-      "direction": "U",
+      "direction": "L",
       "colorIndex": 3
     }
   ]

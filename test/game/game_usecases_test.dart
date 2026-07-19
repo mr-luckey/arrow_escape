@@ -99,4 +99,16 @@ void main() {
       );
     });
   });
+
+  group('Direction normalization', () {
+    test('normalizes mismatched direction to tip segment', () {
+      final mismatched = ArrowEntity(
+        id: 'a',
+        path: const [Cell(0, 0), Cell(0, 1)],
+        direction: Direction.up,
+      ).normalized();
+      expect(mismatched.direction, Direction.right);
+      expect(mismatched.tipDirection, Direction.right);
+    });
+  });
 }

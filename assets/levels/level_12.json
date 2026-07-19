@@ -79,37 +79,37 @@
       "path": [
         [
           2,
-          3
-        ],
-        [
-          3,
-          3
+          2
         ],
         [
           3,
           2
+        ],
+        [
+          3,
+          3
         ],
         [
           2,
-          2
+          3
         ]
       ],
-      "direction": "R",
+      "direction": "U",
       "colorIndex": 4
     },
     {
       "id": "a6",
       "path": [
         [
-          6,
+          5,
           4
         ],
         [
-          5,
+          6,
           4
         ]
       ],
-      "direction": "R",
+      "direction": "D",
       "colorIndex": 5
     },
     {
