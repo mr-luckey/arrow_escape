@@ -19,6 +19,7 @@ dependencies:
   flutter_animate: ^4.5.2
   audioplayers: ^6.4.0
   go_router: ^15.1.2
+  google_mobile_ads: ^9.0.0
 
 dev_dependencies:
   flutter_test:

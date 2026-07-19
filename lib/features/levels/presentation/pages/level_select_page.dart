@@ -174,7 +174,7 @@ class _LevelGrid extends StatelessWidget {
             ),
           ),
         )
-            .animate(delay: (index * 30).ms)
+            .animate(delay: ((index > 24 ? 24 : index) * 20).ms)
             .fadeIn()
             .scale(begin: const Offset(0.9, 0.9));
       },
