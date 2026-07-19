@@ -11,23 +11,19 @@ class GameHud extends StatelessWidget {
     required this.levelLabel,
     required this.hearts,
     required this.maxHearts,
-    required this.onUndo,
     required this.onReset,
     required this.onHint,
     required this.onTheme,
     required this.onBack,
-    required this.canUndo,
   });
 
   final String levelLabel;
   final int hearts;
   final int maxHearts;
-  final VoidCallback onUndo;
   final VoidCallback onReset;
   final VoidCallback onHint;
   final VoidCallback onTheme;
   final VoidCallback onBack;
-  final bool canUndo;
 
   @override
   Widget build(BuildContext context) {
@@ -40,12 +36,6 @@ class GameHud extends StatelessWidget {
               icon: Icons.arrow_back_rounded,
               onPressed: onBack,
               tooltip: 'Back',
-            ),
-            const SizedBox(width: 8),
-            SoftIconButton(
-              icon: Icons.undo_rounded,
-              onPressed: canUndo ? onUndo : null,
-              tooltip: 'Undo',
             ),
             const SizedBox(width: 8),
             SoftIconButton(

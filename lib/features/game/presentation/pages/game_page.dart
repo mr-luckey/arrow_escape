@@ -101,11 +101,7 @@ class _GameView extends StatelessWidget {
                                 levelLabel: 'LEVEL ${level.id}',
                                 hearts: state.hearts,
                                 maxHearts: state.maxHearts,
-                                canUndo: state.undoStack.isNotEmpty,
                                 onBack: () => context.go('/levels'),
-                                onUndo: () => context
-                                    .read<GameBloc>()
-                                    .add(const UndoRequested()),
                                 onReset: () => context
                                     .read<GameBloc>()
                                     .add(const ResetRequested()),

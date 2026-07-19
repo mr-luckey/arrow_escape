@@ -119,7 +119,7 @@ class AdsService {
       },
     );
     await ad.show(
-      onUserEarnedReward: (_, __) {
+      onUserEarnedReward: (_, reward) {
         earned = true;
       },
     );

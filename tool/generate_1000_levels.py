@@ -264,9 +264,20 @@ def dense_fill(
                     continue
             elif not clear_exit(body[-1], tip_dir(body), occupied, rows, cols):
                 continue
-            score = len(body) * 2
-            if tip_dir(body) in outward_dirs(tuple(body[-1]), mask, rows, cols):
-                score += 6
+            # Prefer longer exits / inward tips so edge arrows aren't free wins.
+            d = tip_dir(body)
+            head = body[-1]
+            exit_run = 0
+            dr, dc = DIRS[d]
+            rr0, cc0 = head[0] + dr, head[1] + dc
+            while 0 <= rr0 < rows and 0 <= cc0 < cols:
+                exit_run += 1
+                rr0 += dr
+                cc0 += dc
+            score = len(body) * 2 + min(exit_run, 8)
+            outs = outward_dirs(tuple(head), mask, rows, cols)
+            if d in outs and exit_run <= 1:
+                score -= 4
             if score > best_score:
                 best_score = score
                 best = body

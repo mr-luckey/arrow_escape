@@ -81,7 +81,19 @@ def dense_fill_full(
                 continue
             if len(body) > max_len:
                 continue
-            score = len(body) + (4 if tip_d in outs else 0)
+            # Longer open exits / fewer nearest-edge freebies.
+            d = g.tip_dir(body)
+            head = body[-1]
+            exit_run = 0
+            dr, dc = g.DIRS[d]
+            rr0, cc0 = head[0] + dr, head[1] + dc
+            while 0 <= rr0 < rows and 0 <= cc0 < cols:
+                exit_run += 1
+                rr0 += dr
+                cc0 += dc
+            score = len(body) + min(exit_run, 8)
+            if tip_d in outs and exit_run <= 1:
+                score -= 3
             if score > best_score:
                 best_score = score
                 best = body

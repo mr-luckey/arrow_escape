@@ -14,7 +14,6 @@ class LevelSelectPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final padding = Breakpoints.pagePadding(context);
 
     return GradientBackground(
@@ -47,25 +46,8 @@ class LevelSelectPage extends StatelessWidget {
                         length: 3,
                         child: Column(
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: colors.surface.withValues(alpha: 0.7),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: TabBar(
-                                labelColor: colors.onSurface,
-                                indicator: BoxDecoration(
-                                  color: colors.secondary.withValues(alpha: 0.35),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                tabs: const [
-                                  Tab(text: 'Easy'),
-                                  Tab(text: 'Medium'),
-                                  Tab(text: 'Hard'),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+                            const _DifficultyPillTabs(),
+                            const SizedBox(height: 16),
                             Expanded(
                               child: TabBarView(
                                 children: [
@@ -104,6 +86,95 @@ class LevelSelectPage extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DifficultyPillTabs extends StatelessWidget {
+  const _DifficultyPillTabs();
+
+  static const _labels = ['Easy', 'Medium', 'Hard'];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final controller = DefaultTabController.of(context);
+
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colors.onSurface.withValues(alpha: 0.07),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final tabWidth = constraints.maxWidth / _labels.length;
+
+          return AnimatedBuilder(
+            animation: controller.animation!,
+            builder: (context, _) {
+              final value = controller.animation!.value;
+
+              return Stack(
+                children: [
+                  Positioned(
+                    left: value * tabWidth,
+                    top: 0,
+                    bottom: 0,
+                    width: tabWidth,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.primary,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors.primary.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      for (var i = 0; i < _labels.length; i++)
+                        Expanded(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => controller.animateTo(i),
+                            child: Center(
+                              child: Text(
+                                _labels[i],
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelLarge
+                                    ?.copyWith(
+                                      fontSize: 15,
+                                      color: (value - i).abs() < 0.5
+                                          ? Colors.white
+                                          : colors.muted,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
