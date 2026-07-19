@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show PointMode;
 
 import 'package:flutter/material.dart';
 
@@ -31,7 +32,6 @@ class GameBoard extends StatelessWidget {
   final String? failedArrowId;
   final String? removedArrowId;
   final double exitProgress;
-  /// 0..1 heartbeat phase for hinted arrow.
   final double hintPulse;
   final bool enabled;
 
@@ -39,7 +39,6 @@ class GameBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Fill available play area (width AND height) — no unused margins.
         final maxW = constraints.maxWidth;
         final maxH = constraints.maxHeight;
         final aspect = cols / rows;
@@ -49,7 +48,6 @@ class GameBoard extends StatelessWidget {
           height = maxH;
           width = height * aspect;
         }
-        // Prefer using full height when possible (taller phones).
         if (width < maxW && height < maxH) {
           final byH = maxH;
           final byW = byH * aspect;
@@ -59,33 +57,41 @@ class GameBoard extends StatelessWidget {
           }
         }
 
-        // Edge-to-edge — no rounded clip so arrow tips meet screen sides.
+        final size = Size(width, height);
+
         return Center(
           child: SizedBox(
             width: width,
             height: height,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTapUp: enabled
-                  ? (details) {
-                      final id = _hitTest(
-                        details.localPosition,
-                        Size(width, height),
-                      );
-                      if (id != null) onArrowTapped(id);
-                    }
-                  : null,
-              child: CustomPaint(
-                painter: BoardPainter(
-                  rows: rows,
-                  cols: cols,
-                  arrows: arrows,
-                  arrowColors: arrowColors,
-                  hintArrowId: hintArrowId,
-                  failedArrowId: failedArrowId,
-                  removedArrowId: removedArrowId,
-                  exitProgress: exitProgress,
-                  hintPulse: hintPulse,
+            child: RepaintBoundary(
+              child: Listener(
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: enabled
+                    ? (event) {
+                        final id = hitTestArrow(
+                          event.localPosition,
+                          size,
+                          rows: rows,
+                          cols: cols,
+                          arrows: arrows,
+                        );
+                        if (id != null) onArrowTapped(id);
+                      }
+                    : null,
+                child: CustomPaint(
+                  isComplex: true,
+                  willChange: hintArrowId != null || exitProgress > 0,
+                  painter: BoardPainter(
+                    rows: rows,
+                    cols: cols,
+                    arrows: arrows,
+                    arrowColors: arrowColors,
+                    hintArrowId: hintArrowId,
+                    failedArrowId: failedArrowId,
+                    removedArrowId: removedArrowId,
+                    exitProgress: exitProgress,
+                    hintPulse: hintPulse,
+                  ),
                 ),
               ),
             ),
@@ -95,27 +101,62 @@ class GameBoard extends StatelessWidget {
     );
   }
 
-  String? _hitTest(Offset pos, Size boardSize) {
+  /// Public for tests — generous finger-friendly hit along path segments.
+  static String? hitTestArrow(
+    Offset pos,
+    Size boardSize, {
+    required int rows,
+    required int cols,
+    required List<ArrowEntity> arrows,
+  }) {
+    if (arrows.isEmpty) return null;
     final cellW = boardSize.width / cols;
     final cellH = boardSize.height / rows;
-    // Slightly generous hit for thin strokes.
-    final row = (pos.dy / cellH).floor();
-    final col = (pos.dx / cellW).floor();
-    if (row < 0 || col < 0 || row >= rows || col >= cols) return null;
+    // Finger pad ~22–36px: previously 0.55*cell on 32-col boards was ~5px.
+    final threshold = math.max(22.0, math.min(cellW, cellH) * 1.15);
 
     String? best;
-    var bestDist = double.infinity;
+    var bestDist = threshold;
+
     for (final arrow in arrows) {
-      for (final c in arrow.path) {
-        final center = Offset((c.col + 0.5) * cellW, (c.row + 0.5) * cellH);
-        final d = (pos - center).distance;
-        if (d < bestDist && d < math.min(cellW, cellH) * 0.55) {
+      if (arrow.path.isEmpty) continue;
+      final pts = [
+        for (final c in arrow.path)
+          Offset((c.col + 0.5) * cellW, (c.row + 0.5) * cellH),
+      ];
+      // Fat tip hit so heads are easy to tap.
+      final tip = pts.last;
+      final tipDist = (pos - tip).distance;
+      if (tipDist < bestDist) {
+        bestDist = tipDist;
+        best = arrow.id;
+      }
+      for (var i = 0; i < pts.length; i++) {
+        final d = (pos - pts[i]).distance;
+        if (d < bestDist) {
           bestDist = d;
           best = arrow.id;
+        }
+        if (i + 1 < pts.length) {
+          final seg = _distToSegment(pos, pts[i], pts[i + 1]);
+          if (seg < bestDist) {
+            bestDist = seg;
+            best = arrow.id;
+          }
         }
       }
     }
     return best;
+  }
+
+  static double _distToSegment(Offset p, Offset a, Offset b) {
+    final ab = b - a;
+    final len2 = ab.dx * ab.dx + ab.dy * ab.dy;
+    if (len2 < 0.0001) return (p - a).distance;
+    var t = ((p.dx - a.dx) * ab.dx + (p.dy - a.dy) * ab.dy) / len2;
+    t = t.clamp(0.0, 1.0);
+    final proj = Offset(a.dx + ab.dx * t, a.dy + ab.dy * t);
+    return (p - proj).distance;
   }
 }
 
@@ -149,15 +190,10 @@ class BoardPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cellW = size.width / cols;
     final cellH = size.height / rows;
-
-    // Clean empty playfield — no grid / no frame (screenshot style).
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..color = const Color(0x00FFFFFF),
-    );
+    final dense = arrows.length >= 36;
 
     for (final arrow in arrows) {
-      _paintArrow(canvas, arrow, cellW, cellH);
+      _paintArrow(canvas, arrow, cellW, cellH, dense: dense);
     }
   }
 
@@ -168,7 +204,6 @@ class BoardPainter extends CustomPainter {
     final rail = [
       for (final c in arrow.path) _cellCenter(c, cellW, cellH),
     ];
-    // Always extend using tipDirection so exit matches painted head.
     final (dr, dc) = arrow.tipDirection.delta;
     final extend = arrow.path.length + math.max(rows, cols) + 3;
     var tip = rail.last;
@@ -206,7 +241,6 @@ class BoardPainter extends CustomPainter {
     ];
   }
 
-  /// Rounded corners like Arrow Wave / Arrow GO thin paths.
   Path _smoothPath(List<Offset> points, double radius) {
     final path = Path();
     if (points.isEmpty) return path;
@@ -247,8 +281,9 @@ class BoardPainter extends CustomPainter {
     Canvas canvas,
     ArrowEntity arrow,
     double cellW,
-    double cellH,
-  ) {
+    double cellH, {
+    required bool dense,
+  }) {
     final color = arrowColors[arrow.colorIndex % arrowColors.length];
     final isHint = arrow.id == hintArrowId;
     final isFailed = arrow.id == failedArrowId;
@@ -271,58 +306,46 @@ class BoardPainter extends CustomPainter {
     final strokeColor =
         (isFailed ? const Color(0xFFFF3B3B) : color).withValues(alpha: opacity);
 
+    final linePaint = Paint()
+      ..color = strokeColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..isAntiAlias = !dense;
+
     if (isHint && !isExiting) {
-      // Heartbeat: scale stroke + glow with pulse (0→1→0 feel via sin).
+      // Cheap pulse — no MaskFilter.blur (was a major FPS killer).
       final beat = 0.5 + 0.5 * math.sin(hintPulse * math.pi * 2);
-      final glowW = stroke * (2.4 + beat * 2.2);
       canvas.drawPath(
         path,
         Paint()
-          ..color = color.withValues(alpha: 0.25 + beat * 0.45)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 6 + beat * 10)
+          ..color = color.withValues(alpha: 0.35 + beat * 0.4)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = glowW
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round,
-      );
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = color.withValues(alpha: 0.55 + beat * 0.45)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = stroke * (1.15 + beat * 0.55)
+          ..strokeWidth = stroke * (2.0 + beat * 1.6)
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round,
       );
     }
 
-    // Soft shadow under thin line (Arrow GO style lift).
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = Colors.black.withValues(alpha: 0.06 * opacity)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2),
-    );
+    // Skip soft shadows on dense boards (GPU thrash).
+    if (!dense) {
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.05 * opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.0),
+      );
+    }
 
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = strokeColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
-    );
+    canvas.drawPath(path, linePaint);
 
-    // Arrowhead always matches tip / exit direction (not a mismatched visual).
     final (dr, dc) = tipDir.delta;
     final head = points.last;
-    // While exiting through bends mid-path, prefer tipDir once past body,
-    // else follow last drawn segment so head stays aligned on the line.
     Offset heading;
     if (isExiting && points.length >= 2) {
       final seg = points.last - points[points.length - 2];
@@ -333,21 +356,17 @@ class BoardPainter extends CustomPainter {
       heading = Offset(dc * cellW, dr * cellH);
     }
 
-    final nx = heading.dx / heading.distance;
-    final ny = heading.dy / heading.distance;
-    // Compact heads — less overlap when paths run close.
+    final dist = heading.distance;
+    if (dist < 0.001) return;
+    final nx = heading.dx / dist;
+    final ny = heading.dy / dist;
     final headLen = stroke * 3.2;
     final headWidth = stroke * 2.4;
     final tip = Offset(head.dx + nx * headLen, head.dy + ny * headLen);
-    final base = Offset(head.dx - nx * stroke * 0.2, head.dy - ny * stroke * 0.2);
-    final left = Offset(
-      base.dx - ny * headWidth,
-      base.dy + nx * headWidth,
-    );
-    final right = Offset(
-      base.dx + ny * headWidth,
-      base.dy - nx * headWidth,
-    );
+    final base =
+        Offset(head.dx - nx * stroke * 0.2, head.dy - ny * stroke * 0.2);
+    final left = Offset(base.dx - ny * headWidth, base.dy + nx * headWidth);
+    final right = Offset(base.dx + ny * headWidth, base.dy - nx * headWidth);
 
     final headPath = Path()
       ..moveTo(tip.dx, tip.dy)
@@ -355,24 +374,15 @@ class BoardPainter extends CustomPainter {
       ..lineTo(right.dx, right.dy)
       ..close();
     canvas.drawPath(headPath, Paint()..color = strokeColor);
-    if (isHint && !isExiting) {
-      final beat = 0.5 + 0.5 * math.sin(hintPulse * math.pi * 2);
-      canvas.drawPath(
-        headPath,
-        Paint()
-          ..color = color.withValues(alpha: 0.35 + beat * 0.4)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4 + beat * 6)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2 + beat * 2,
-      );
-    }
 
-    // Tiny tail dot like reference apps (subtle, not chunky).
     if (!isExiting || exitProgress < 0.7) {
-      canvas.drawCircle(
-        points.first,
-        stroke * 0.65,
-        Paint()..color = strokeColor,
+      canvas.drawPoints(
+        PointMode.points,
+        [points.first],
+        Paint()
+          ..color = strokeColor
+          ..strokeWidth = stroke * 1.3
+          ..strokeCap = StrokeCap.round,
       );
     }
   }
@@ -384,7 +394,7 @@ class BoardPainter extends CustomPainter {
         old.failedArrowId != failedArrowId ||
         old.removedArrowId != removedArrowId ||
         old.exitProgress != exitProgress ||
-        old.hintPulse != hintPulse ||
+        (old.hintPulse != hintPulse && hintArrowId != null) ||
         old.arrowColors != arrowColors;
   }
 }

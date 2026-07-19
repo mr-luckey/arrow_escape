@@ -9,6 +9,9 @@ import '../../features/game/domain/usecases/game_usecases.dart';
 import '../../features/levels/presentation/bloc/progress_cubit.dart';
 import '../../features/settings/presentation/bloc/settings_cubit.dart';
 import '../ads/ads_service.dart';
+import '../audio/audio_service.dart';
+import '../haptics/haptics_service.dart';
+import '../store/app_store_service.dart';
 import '../theme/theme_cubit.dart';
 
 final sl = GetIt.instance;
@@ -17,7 +20,10 @@ Future<void> configureDependencies() async {
   final prefs = await SharedPreferences.getInstance();
   sl.registerSingleton<SharedPreferences>(prefs);
 
-  sl.registerLazySingleton(() => AdsService());
+  sl.registerLazySingleton(() => AudioService());
+  sl.registerLazySingleton(() => HapticsService());
+  sl.registerLazySingleton(() => AdsService(sl()));
+  sl.registerLazySingleton(() => AppStoreService(sl()));
   sl.registerLazySingleton(() => LevelAssetDataSource());
   sl.registerLazySingleton(() => ProgressLocalDataSource(sl()));
 
@@ -33,6 +39,6 @@ Future<void> configureDependencies() async {
   sl.registerLazySingleton(() => GetHintUseCase(canEscape: sl()));
 
   sl.registerFactory(() => ThemeCubit(sl()));
-  sl.registerFactory(() => SettingsCubit(sl()));
+  sl.registerFactory(() => SettingsCubit(sl(), sl(), sl()));
   sl.registerFactory(() => ProgressCubit(sl(), sl()));
 }

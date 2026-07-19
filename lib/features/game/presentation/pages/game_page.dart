@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/ads/ads_service.dart';
 import '../../../../core/ads/banner_ad_widget.dart';
+import '../../../../core/audio/audio_service.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/haptics/haptics_service.dart';
 import '../../../../core/theme/app_theme_extension.dart';
-import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/widgets/app_widgets.dart';
 import '../../../levels/presentation/bloc/progress_cubit.dart';
 import '../../../settings/presentation/bloc/settings_cubit.dart';
@@ -55,18 +55,47 @@ class _GameView extends StatelessWidget {
           bottom: false,
           child: BlocConsumer<GameBloc, GameState>(
             listenWhen: (p, c) =>
+                p.moveCount != c.moveCount ||
+                p.status != c.status ||
                 p.lastFailedArrowId != c.lastFailedArrowId ||
-                p.status != c.status,
+                p.lastRemovedArrowId != c.lastRemovedArrowId,
+            buildWhen: (p, c) =>
+                p.status != c.status ||
+                p.arrows != c.arrows ||
+                p.hearts != c.hearts ||
+                p.hintArrowId != c.hintArrowId ||
+                p.lastFailedArrowId != c.lastFailedArrowId ||
+                p.lastRemovedArrowId != c.lastRemovedArrowId ||
+                p.level?.id != c.level?.id ||
+                p.moveCount != c.moveCount,
             listener: (context, state) {
-              final settings = context.read<SettingsCubit>().state;
+              final audio = sl<AudioService>();
+              final haptics = sl<HapticsService>();
+              // Keep in sync with settings (factory cubit can be recreated).
+              haptics.setEnabled(
+                context.read<SettingsCubit>().state.hapticsEnabled,
+              );
+
+              if (state.status == GameStatus.animating &&
+                  state.lastRemovedArrowId != null) {
+                audio.playEscape();
+                haptics.light();
+              }
+
               if (state.lastFailedArrowId != null &&
                   state.status == GameStatus.playing) {
-                if (settings.hapticsEnabled) {
-                  HapticFeedback.mediumImpact();
-                }
+                audio.playWrong();
+                haptics.medium();
               }
-              if (state.status == GameStatus.won ||
-                  state.status == GameStatus.lost) {
+
+              if (state.status == GameStatus.won) {
+                audio.playWin();
+                haptics.heavy();
+                context.read<ProgressCubit>().refresh();
+                sl<AdsService>().maybeShowInterstitialOnLevelEnd();
+              } else if (state.status == GameStatus.lost) {
+                audio.playLose();
+                haptics.heavy();
                 context.read<ProgressCubit>().refresh();
                 sl<AdsService>().maybeShowInterstitialOnLevelEnd();
               }
@@ -106,82 +135,72 @@ class _GameView extends StatelessWidget {
                                     .read<GameBloc>()
                                     .add(const ResetRequested()),
                                 onHint: () => _onHint(context),
-                                onTheme: () =>
-                                    context.read<ThemeCubit>().cycle(),
+                                onSettings: () => context.go('/settings'),
                               ),
                             ),
                             // Space after hearts before playfield.
                             const SizedBox(height: 20),
                             Expanded(
-                              child: ExitAnimationGate(
-                                status: state.status,
-                                animationKey: state.lastRemovedArrowId == null
-                                    ? null
-                                    : '${state.lastRemovedArrowId}-${state.moveCount}',
-                                onCompleted: () => context
-                                    .read<GameBloc>()
-                                    .add(const AnimationCompleted()),
-                                child: (progress) {
-                                  return HintPulse(
-                                    active: state.hintArrowId != null &&
-                                        state.status == GameStatus.playing,
-                                    builder: (context, pulse) {
-                                      final board = GameBoard(
-                                        rows: level.rows,
-                                        cols: level.cols,
-                                        arrows: state.arrows,
-                                        arrowColors: colors.arrowPalette,
-                                        hintArrowId: state.hintArrowId,
-                                        failedArrowId:
-                                            state.lastFailedArrowId,
-                                        removedArrowId:
-                                            state.lastRemovedArrowId,
-                                        exitProgress: progress,
-                                        hintPulse: pulse,
-                                        enabled: state.status ==
-                                            GameStatus.playing,
-                                        onArrowTapped: (id) {
-                                          final settings = context
-                                              .read<SettingsCubit>()
-                                              .state;
-                                          if (settings.hapticsEnabled) {
-                                            HapticFeedback.selectionClick();
-                                          }
-                                          context
-                                              .read<GameBloc>()
-                                              .add(ArrowTapped(id));
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 10),
+                                child: AppCard(
+                                  elevation: 10,
+                                  borderRadius: 22,
+                                  padding: const EdgeInsets.all(12),
+                                  child: ExitAnimationGate(
+                                    status: state.status,
+                                    animationKey:
+                                        state.lastRemovedArrowId == null
+                                            ? null
+                                            : '${state.lastRemovedArrowId}-${state.moveCount}',
+                                    onCompleted: () => context
+                                        .read<GameBloc>()
+                                        .add(const AnimationCompleted()),
+                                    child: (progress) {
+                                      return HintPulse(
+                                        active: state.hintArrowId != null &&
+                                            state.status == GameStatus.playing,
+                                        builder: (context, pulse) {
+                                          final board = GameBoard(
+                                            rows: level.rows,
+                                            cols: level.cols,
+                                            arrows: state.arrows,
+                                            arrowColors: colors.arrowPalette,
+                                            hintArrowId: state.hintArrowId,
+                                            failedArrowId:
+                                                state.lastFailedArrowId,
+                                            removedArrowId:
+                                                state.lastRemovedArrowId,
+                                            exitProgress: progress,
+                                            hintPulse: pulse,
+                                            enabled: state.status ==
+                                                GameStatus.playing,
+                                            onArrowTapped: (id) {
+                                              sl<HapticsService>().setEnabled(
+                                                context
+                                                    .read<SettingsCubit>()
+                                                    .state
+                                                    .hapticsEnabled,
+                                              );
+                                              sl<HapticsService>().selection();
+                                              context
+                                                  .read<GameBloc>()
+                                                  .add(ArrowTapped(id));
+                                            },
+                                          );
+
+                                          return board;
                                         },
                                       );
-
-                                      if (state.lastFailedArrowId != null &&
-                                          state.status ==
-                                              GameStatus.playing) {
-                                        return TweenAnimationBuilder<double>(
-                                          key: ValueKey(
-                                            '${state.lastFailedArrowId}-${state.moveCount}',
-                                          ),
-                                          tween: Tween(begin: -8, end: 8),
-                                          duration: const Duration(
-                                            milliseconds: 80,
-                                          ),
-                                          curve: Curves.easeInOut,
-                                          builder: (context, value, child) {
-                                            return Transform.translate(
-                                              offset: Offset(value, 0),
-                                              child: child,
-                                            );
-                                          },
-                                          child: board,
-                                        );
-                                      }
-                                      return board;
                                     },
-                                  );
-                                },
+                                  ),
+                                ),
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.only(top: 4, bottom: 4),
+                              padding:
+                                  const EdgeInsets.only(top: 4, bottom: 4),
                               child: Text(
                                 level.name,
                                 maxLines: 1,
@@ -217,7 +236,7 @@ class _GameView extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Reserved banner slot — only free space left for ads.
+                  // Banner stays plain — no card/elevation around ads.
                   const BannerAdWidget(height: 50),
                   SizedBox(height: MediaQuery.paddingOf(context).bottom),
                 ],

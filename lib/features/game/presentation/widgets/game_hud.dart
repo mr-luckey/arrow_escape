@@ -13,7 +13,7 @@ class GameHud extends StatelessWidget {
     required this.maxHearts,
     required this.onReset,
     required this.onHint,
-    required this.onTheme,
+    required this.onSettings,
     required this.onBack,
   });
 
@@ -22,7 +22,7 @@ class GameHud extends StatelessWidget {
   final int maxHearts;
   final VoidCallback onReset;
   final VoidCallback onHint;
-  final VoidCallback onTheme;
+  final VoidCallback onSettings;
   final VoidCallback onBack;
 
   @override
@@ -45,9 +45,9 @@ class GameHud extends StatelessWidget {
             ),
             const Spacer(),
             SoftIconButton(
-              icon: Icons.palette_rounded,
-              onPressed: onTheme,
-              tooltip: 'Theme',
+              icon: Icons.settings_rounded,
+              onPressed: onSettings,
+              tooltip: 'Settings',
               background: colors.accent.withValues(alpha: 0.35),
             ),
             const SizedBox(width: 8),
@@ -135,14 +135,52 @@ class WinOverlay extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Cleared!',
-              style: Theme.of(context).textTheme.displayMedium,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'Congratulations',
+                maxLines: 1,
+                softWrap: false,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                    ),
+              ),
             )
                 .animate()
+                .fadeIn(duration: 380.ms)
+                .scale(
+                  begin: const Offset(0.5, 0.5),
+                  end: const Offset(1, 1),
+                  curve: Curves.elasticOut,
+                  duration: 900.ms,
+                )
+                .shimmer(
+                  delay: 200.ms,
+                  duration: 1400.ms,
+                  color: colors.accent.withValues(alpha: 0.65),
+                )
+                .then(delay: 200.ms)
+                .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                .scaleXY(
+                  begin: 1,
+                  end: 1.04,
+                  duration: 800.ms,
+                  curve: Curves.easeInOut,
+                ),
+            const SizedBox(height: 8),
+            Text(
+              'Level cleared!',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: colors.muted,
+                  ),
+            )
+                .animate(delay: 220.ms)
                 .fadeIn()
-                .scale(begin: const Offset(0.8, 0.8)),
-            const SizedBox(height: 12),
+                .slideY(begin: 0.35, curve: Curves.easeOut),
+            const SizedBox(height: 14),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(3, (i) {
@@ -244,7 +282,7 @@ class ExitAnimationGate extends StatelessWidget {
       key: ValueKey(animationKey),
       tween: Tween(begin: 0, end: 1),
       // Longer so the path-follow pull-out reads clearly.
-      duration: const Duration(milliseconds: 680),
+      duration: const Duration(milliseconds: 420),
       curve: Curves.easeInOutCubic,
       onEnd: onCompleted,
       builder: (context, value, _) => child(value),

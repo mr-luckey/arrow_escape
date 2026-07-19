@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'app.dart';
 import 'core/ads/ads_service.dart';
+import 'core/audio/audio_service.dart';
 import 'core/di/injection.dart';
 
 Future<void> main() async {
@@ -12,6 +13,7 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
   await configureDependencies();
+  await sl<AudioService>().init();
   await sl<AdsService>().init();
   runApp(ArrowEscapeApp());
 }

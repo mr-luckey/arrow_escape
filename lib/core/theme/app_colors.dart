@@ -121,4 +121,12 @@ extension AppColorSchemeIdX on AppColorSchemeId {
         AppColorSchemeId.ocean => 'Ocean Glow',
         AppColorSchemeId.sunset => 'Sunset Burst',
       };
+
+  /// Full-bleed theme background. Null = use gradient fallback.
+  String? get backgroundAsset => switch (this) {
+        AppColorSchemeId.sunset =>
+          'assets/images/backgrounds/bg_sunset.png',
+        AppColorSchemeId.sky => 'assets/images/backgrounds/bg_sky.png',
+        AppColorSchemeId.ocean => 'assets/images/backgrounds/bg_ocean.png',
+      };
 }

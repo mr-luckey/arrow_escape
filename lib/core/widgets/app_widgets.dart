@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_theme_extension.dart';
 
 class GradientBackground extends StatelessWidget {
@@ -10,8 +11,11 @@ class GradientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return DecoratedBox(
+    final theme = context.appTheme;
+    final colors = theme.colors;
+    final asset = theme.schemeId.backgroundAsset;
+
+    final gradient = DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -20,6 +24,24 @@ class GradientBackground extends StatelessWidget {
         ),
       ),
       child: child,
+    );
+
+    if (asset == null) return gradient;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Soft theme-tinted fallback while image loads / behind letterbox.
+        ColoredBox(color: colors.gradientBottom),
+        Image.asset(
+          asset,
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+          gaplessPlayback: true,
+          filterQuality: FilterQuality.medium,
+        ),
+        child,
+      ],
     );
   }
 }
@@ -46,6 +68,8 @@ class AppPrimaryButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: colors.primary,
         foregroundColor: Colors.white,
+        elevation: 5,
+        shadowColor: colors.primary.withValues(alpha: 0.45),
         minimumSize: Size(expanded ? double.infinity : 160, 56),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
@@ -82,15 +106,21 @@ class AppSecondaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: colors.onSurface,
-        side: BorderSide(color: colors.secondary, width: 2),
-        minimumSize: const Size(double.infinity, 52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    return Material(
+      color: colors.surface.withValues(alpha: 0.55),
+      elevation: 3,
+      shadowColor: colors.onSurface.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(18),
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: colors.onSurface,
+          side: BorderSide(color: colors.secondary, width: 2),
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        ),
+        child: Text(label),
       ),
-      child: Text(label),
     );
   }
 }
@@ -118,9 +148,9 @@ class SoftIconButton extends StatelessWidget {
       child: Tooltip(
         message: tooltip ?? '',
         child: Material(
-          color: background ?? colors.surface.withValues(alpha: 0.92),
-          elevation: enabled ? 2 : 0,
-          shadowColor: colors.onSurface.withValues(alpha: 0.08),
+          color: background ?? colors.surface,
+          elevation: enabled ? 4 : 0,
+          shadowColor: colors.onSurface.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(14),
           child: InkWell(
             onTap: onPressed,
@@ -132,6 +162,46 @@ class SoftIconButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Shared elevated surface used across home, game, settings, and levels.
+class AppCard extends StatelessWidget {
+  const AppCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.margin,
+    this.elevation = 6,
+    this.borderRadius = 20,
+    this.color,
+    this.clipBehavior = Clip.antiAlias,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final double elevation;
+  final double borderRadius;
+  final Color? color;
+  final Clip clipBehavior;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Padding(
+      padding: margin ?? EdgeInsets.zero,
+      child: Material(
+        color: color ?? colors.surface,
+        elevation: elevation,
+        shadowColor: colors.onSurface.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(borderRadius),
+        clipBehavior: clipBehavior,
+        child: padding == null
+            ? child
+            : Padding(padding: padding!, child: child),
       ),
     );
   }

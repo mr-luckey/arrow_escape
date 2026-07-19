@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/ads/banner_ad_widget.dart';
 import '../../../../core/responsive/breakpoints.dart';
 import '../../../../core/theme/app_theme_extension.dart';
 import '../../../../core/widgets/app_widgets.dart';
@@ -20,70 +21,92 @@ class LevelSelectPage extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: Padding(
-            padding: padding.copyWith(top: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    SoftIconButton(
-                      icon: Icons.arrow_back_rounded,
-                      onPressed: () => context.go('/'),
-                    ),
-                    const SizedBox(width: 12),
-                    Text('Levels', style: Theme.of(context).textTheme.displayMedium),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: BlocBuilder<ProgressCubit, ProgressState>(
-                    builder: (context, state) {
-                      if (state.loading) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      return DefaultTabController(
-                        length: 3,
-                        child: Column(
-                          children: [
-                            const _DifficultyPillTabs(),
-                            const SizedBox(height: 16),
-                            Expanded(
-                              child: TabBarView(
+          bottom: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: padding.copyWith(top: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          SoftIconButton(
+                            icon: Icons.arrow_back_rounded,
+                            onPressed: () => context.go('/'),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Levels',
+                            style: Theme.of(context).textTheme.displayMedium,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: BlocBuilder<ProgressCubit, ProgressState>(
+                          builder: (context, state) {
+                            if (state.loading) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+                            return DefaultTabController(
+                              length: 3,
+                              child: Column(
                                 children: [
-                                  _LevelGrid(
-                                    levels: state.levels
-                                        .where((l) =>
-                                            l.difficulty == LevelDifficulty.easy)
-                                        .toList(),
-                                    progress: state,
-                                  ),
-                                  _LevelGrid(
-                                    levels: state.levels
-                                        .where((l) =>
-                                            l.difficulty ==
-                                            LevelDifficulty.medium)
-                                        .toList(),
-                                    progress: state,
-                                  ),
-                                  _LevelGrid(
-                                    levels: state.levels
-                                        .where((l) =>
-                                            l.difficulty == LevelDifficulty.hard)
-                                        .toList(),
-                                    progress: state,
+                                  const _DifficultyPillTabs(),
+                                  const SizedBox(height: 16),
+                                  Expanded(
+                                    child: TabBarView(
+                                      children: [
+                                        _LevelGrid(
+                                          levels: state.levels
+                                              .where(
+                                                (l) =>
+                                                    l.difficulty ==
+                                                    LevelDifficulty.easy,
+                                              )
+                                              .toList(),
+                                          progress: state,
+                                        ),
+                                        _LevelGrid(
+                                          levels: state.levels
+                                              .where(
+                                                (l) =>
+                                                    l.difficulty ==
+                                                    LevelDifficulty.medium,
+                                              )
+                                              .toList(),
+                                          progress: state,
+                                        ),
+                                        _LevelGrid(
+                                          levels: state.levels
+                                              .where(
+                                                (l) =>
+                                                    l.difficulty ==
+                                                    LevelDifficulty.hard,
+                                              )
+                                              .toList(),
+                                          progress: state,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              const BannerAdWidget(height: 50),
+              SizedBox(height: MediaQuery.paddingOf(context).bottom),
+            ],
           ),
         ),
       ),
