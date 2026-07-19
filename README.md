@@ -1,4 +1,4 @@
-# Arrow Escape
+# ColorPath Out
 
 Bright, colorful Flutter puzzle game — tap polyline arrows so they slide off the board without collisions.
 

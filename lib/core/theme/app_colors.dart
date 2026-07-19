@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Bright brand palettes for Arrow Escape.
+/// Bright brand palettes for ColorPath Out.
 class AppColors {
   const AppColors({
     required this.gradientTop,

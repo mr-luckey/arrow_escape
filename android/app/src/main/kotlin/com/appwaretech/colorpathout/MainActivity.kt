@@ -1,4 +1,4 @@
-package com.example.arrow_escape
+package com.appwaretech.colorpathout
 
 import io.flutter.embedding.android.FlutterActivity
 

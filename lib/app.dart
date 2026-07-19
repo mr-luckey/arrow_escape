@@ -13,8 +13,8 @@ import 'core/theme/theme_cubit.dart';
 import 'features/levels/presentation/bloc/progress_cubit.dart';
 import 'features/settings/presentation/bloc/settings_cubit.dart';
 
-class ArrowEscapeApp extends StatelessWidget {
-  ArrowEscapeApp({super.key}) : _router = createRouter();
+class ColorPathOutApp extends StatelessWidget {
+  ColorPathOutApp({super.key}) : _router = createRouter();
 
   final GoRouter _router;
 
@@ -29,7 +29,7 @@ class ArrowEscapeApp extends StatelessWidget {
       child: BlocBuilder<ThemeCubit, AppColorSchemeId>(
         builder: (context, scheme) {
           return MaterialApp.router(
-            title: 'Arrow Escape',
+            title: 'ColorPath Out',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light(scheme),
             routerConfig: _router,

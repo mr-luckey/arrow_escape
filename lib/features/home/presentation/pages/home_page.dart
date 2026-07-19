@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       const Spacer(flex: 3),
                       Text(
-                        'ARROW ESCAPE',
+                        'ColorPath Out',
                         textAlign: TextAlign.center,
                         style:
                             Theme.of(context).textTheme.displayLarge?.copyWith(

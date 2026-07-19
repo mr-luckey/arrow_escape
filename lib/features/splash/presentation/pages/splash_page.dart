@@ -24,7 +24,7 @@ class SplashPage extends StatelessWidget {
                   .fadeIn(),
               const SizedBox(height: 16),
               Text(
-                'ARROW ESCAPE',
+                'ColorPath Out',
                 style: Theme.of(context).textTheme.displayMedium,
               ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
               const SizedBox(height: 28),

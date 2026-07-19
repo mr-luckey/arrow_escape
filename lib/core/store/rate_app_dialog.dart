@@ -65,7 +65,7 @@ class _RateAppCard extends StatelessWidget {
                   .scale(duration: 400.ms, curve: Curves.elasticOut),
               const SizedBox(height: 12),
               Text(
-                'Enjoying Arrow Escape?',
+                'Enjoying ColorPath Out?',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: colors.onSurface,

@@ -15,5 +15,5 @@ Future<void> main() async {
   await configureDependencies();
   await sl<AudioService>().init();
   await sl<AdsService>().init();
-  runApp(ArrowEscapeApp());
+  runApp(ColorPathOutApp());
 }
