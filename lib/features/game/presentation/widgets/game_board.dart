@@ -136,37 +136,11 @@ class BoardPainter extends CustomPainter {
     final cellW = size.width / cols;
     final cellH = size.height / rows;
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        const Radius.circular(24),
-      ),
-      Paint()..color = const Color(0xFFFFFFF8),
+    // Clean empty playfield — no grid / no frame (screenshot style).
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Paint()..color = const Color(0x00FFFFFF),
     );
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(1.5, 1.5, size.width - 3, size.height - 3),
-        const Radius.circular(24),
-      ),
-      Paint()
-        ..color = const Color(0xFFE2EEF5)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
-
-    // Very subtle grid — screenshots are mostly clean.
-    final grid = Paint()
-      ..color = const Color(0x08000000)
-      ..strokeWidth = 0.8;
-    for (var r = 1; r < rows; r++) {
-      final y = r * cellH;
-      canvas.drawLine(Offset(10, y), Offset(size.width - 10, y), grid);
-    }
-    for (var c = 1; c < cols; c++) {
-      final x = c * cellW;
-      canvas.drawLine(Offset(x, 10), Offset(x, size.height - 10), grid);
-    }
 
     for (final arrow in arrows) {
       _paintArrow(canvas, arrow, cellW, cellH);
