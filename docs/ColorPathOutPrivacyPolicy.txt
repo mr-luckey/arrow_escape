@@ -1,0 +1,177 @@
+================================================================================
+PRIVACY POLICY — ColorPath Out
+Last updated: July 23, 2026
+================================================================================
+
+This Privacy Policy explains how AppWare Tech ("we", "us", or "our") collects,
+uses, and shares information when you use the mobile application ColorPath Out
+(the "App").
+
+By downloading or using ColorPath Out, you agree to this Privacy Policy. If you
+do not agree, please do not use the App.
+
+
+--------------------------------------------------------------------------------
+1. WHO WE ARE
+--------------------------------------------------------------------------------
+
+App name:     ColorPath Out
+Publisher:    AppWare Tech
+Package:      com.appwaretech.colorpathout
+Contact:      contact@appwaretech.com
+
+
+--------------------------------------------------------------------------------
+2. INFORMATION WE COLLECT
+--------------------------------------------------------------------------------
+
+ColorPath Out is primarily an offline puzzle game. We do not require you to
+create an account, and we do not ask for your name, email address, phone number,
+or other personal registration details to play.
+
+2.1 Information stored on your device (locally)
+    The App may store the following on your device using local storage
+    (for example SharedPreferences):
+
+    • Game progress (levels completed, scores, lives/hearts, hints)
+    • Settings preferences (sound, vibration, theme, and similar options)
+    • App review / update related flags
+
+    This data stays on your device. We do not upload it to our own servers.
+
+2.2 Information collected by advertising partners
+    The App displays ads through Google AdMob (Google LLC). Ad partners may
+    automatically collect certain information from your device, which may
+    include:
+
+    • Advertising ID / device identifiers
+    • IP address
+    • Device type, operating system, and app version
+    • Approximate location derived from IP address
+    • Ad interaction data (views, clicks)
+
+    This information is collected and processed by Google under their own
+    privacy policies. We do not control how Google uses this data.
+
+    Google Privacy Policy: https://policies.google.com/privacy
+    How Google uses data from apps: https://policies.google.com/technologies/partner-sites
+
+2.3 Information we do NOT collect ourselves
+    We do not operate our own analytics backend for this App. We do not sell
+    your personal information. We do not collect precise GPS location, contacts,
+    photos, microphone audio, or camera data for this game.
+
+
+--------------------------------------------------------------------------------
+3. HOW WE USE INFORMATION
+--------------------------------------------------------------------------------
+
+Information is used only to:
+
+    • Provide and improve gameplay (saving progress and settings on device)
+    • Show advertisements that help keep the App free to play
+    • Support optional features such as in-app update checks and rating prompts
+    • Respond to support requests you send us by email
+
+
+--------------------------------------------------------------------------------
+4. HOW WE SHARE INFORMATION
+--------------------------------------------------------------------------------
+
+We do not sell personal information.
+
+Data may be processed by third parties solely as needed to run the App:
+
+    • Google AdMob — advertising services
+    • Google Play Services — app distribution, updates, and related services
+      (when you install from Google Play)
+
+These partners process data according to their own privacy policies.
+
+
+--------------------------------------------------------------------------------
+5. CHILDREN'S PRIVACY
+--------------------------------------------------------------------------------
+
+ColorPath Out is intended for a general audience (Everyone content rating) and
+does not knowingly collect personal information from children under 13 (or the
+equivalent minimum age in your country) for our own use.
+
+Advertising in the App is served by Google AdMob. Parents and guardians who
+believe a child has provided personal information through ads or related
+services should contact us at contact@appwaretech.com, and we will take
+reasonable steps to address the request with applicable partners.
+
+
+--------------------------------------------------------------------------------
+6. DATA RETENTION
+--------------------------------------------------------------------------------
+
+Local game data remains on your device until you clear the App's data, uninstall
+the App, or reset progress within the App (if available).
+
+Advertising and device data collected by Google AdMob is retained according to
+Google's policies, not ours.
+
+
+--------------------------------------------------------------------------------
+7. YOUR CHOICES AND RIGHTS
+--------------------------------------------------------------------------------
+
+You can:
+
+    • Clear App data or uninstall the App to remove locally stored progress and
+      settings
+    • Reset or limit your advertising ID in your device settings
+      (Android: Settings → Google → Ads, or equivalent on your device)
+    • Opt out of personalized ads where your device or Google account provides
+      that option
+    • Contact us to request information about data practices related to the App
+
+Depending on where you live (for example under GDPR or CCPA/CPRA), you may have
+additional rights regarding personal data. To exercise a request related to our
+App, email contact@appwaretech.com. For data held only by Google (ads), you may
+also need to use Google's tools and policies.
+
+
+--------------------------------------------------------------------------------
+8. SECURITY
+--------------------------------------------------------------------------------
+
+We take reasonable steps to protect information processed in connection with the
+App. No method of electronic storage or transmission is 100% secure. Local data
+on your device is protected by your device's security features.
+
+
+--------------------------------------------------------------------------------
+9. THIRD-PARTY LINKS AND SERVICES
+--------------------------------------------------------------------------------
+
+The App may open links or use services outside our control (for example Google
+Play or ad destinations). Their privacy practices are governed by their own
+policies, not this one.
+
+
+--------------------------------------------------------------------------------
+10. CHANGES TO THIS POLICY
+--------------------------------------------------------------------------------
+
+We may update this Privacy Policy from time to time. The "Last updated" date at
+the top will change when we do. Continued use of the App after an update means
+you accept the revised policy. For material changes, we may provide additional
+notice in the App or on the store listing when practical.
+
+
+--------------------------------------------------------------------------------
+11. CONTACT US
+--------------------------------------------------------------------------------
+
+If you have questions about this Privacy Policy or ColorPath Out, contact us at:
+
+    Email:    contact@appwaretech.com
+    App:      ColorPath Out
+    Publisher: AppWare Tech
+
+================================================================================
+END OF PRIVACY POLICY
+================================================================================

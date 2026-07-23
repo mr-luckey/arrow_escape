@@ -1,7 +1,7 @@
 name: arrow_escape
 description: ColorPath Out — a bright colorful arrow path puzzle game.
 publish_to: 'none'
-version: 0.1.0+1
+version: 3.0.0+3
 
 environment:
   sdk: ^3.12.2

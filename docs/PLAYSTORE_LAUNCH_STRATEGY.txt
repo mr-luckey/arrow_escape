@@ -345,7 +345,207 @@ DO NOT USE:
 
 
 ================================================================================
-10) RESEARCH SOURCES (sampled July 2026)
+10) INDIA + MYANMAR ASO (ENGLISH COPY) — 1M DOWNLOAD PATH
+Research date: 23 July 2026 | English listings targeted at IN + MY search demand
+================================================================================
+
+REALITY CHECK ON “1M IN 3 MONTHS”
+---------------------------------
+• Organic-only: not realistic for 1M.
+• India = real volume engine (Arrows genre downloads heavily India-driven).
+• Myanmar = cheap CPI soft-launch / chart assist, not a 1M market alone.
+• Path: soft launch MY → scale INDIA with English ASO + UAC/Meta/TikTok.
+  India casual CPI ~$0.08–0.25 → paid 400–700K + organic rank can reach ~1M.
+  Without paid UA, treat 1M as aspirational.
+
+WHY THESE KEYWORDS (ENGLISH, BUT TUNED FOR IN + MY)
+---------------------------------------------------
+  Avoid head war: “arrow escape”, “arrows puzzle escape” (Lessmore / Easybrain).
+  Win mid-tail that IN + MY actually convert on:
+    colorful arrow puzzle | path puzzle | offline brain game | no timer
+    logic puzzle | tap puzzle | color path | free offline puzzle | IQ game
+  India: English Play search dominates for this genre (users type EN keywords).
+  Myanmar: English listings still index well; lead with offline / free / color /
+    brain / relax — matches local puzzle chart tastes (tile, water sort, brain).
+
+
+------------------------------------------------------------------------------
+A) INDIA — PRIMARY VOLUME (English listing / custom store listing for IN)
+------------------------------------------------------------------------------
+
+KEYWORD TIERS
+  TIER 1 (title + short + first ~250 chars of long)
+    arrow puzzle | colorful arrow puzzle | path puzzle | offline brain game
+    logic puzzle | no timer | free puzzle game | IQ game
+
+  TIER 2 (scatter naturally in long)
+    color path puzzle | tap puzzle | clear the grid | relaxing puzzle
+    handcrafted levels | spatial thinking | offline puzzle | brain training
+    calm logic game | stress free puzzle
+
+  AVOID AS PRIMARY
+    arrow escape | arrows puzzle escape | cash / reward / win money
+
+TITLE (≤30 chars)
+  ColorPath Out: Arrow Puzzle
+
+  ALT (A/B):
+    A) ColorPath: Color Arrow Puzzle
+    B) ColorPath Out: Path Puzzle
+    C) ColorPath: Offline Brain Game
+
+SHORT DESCRIPTION (≤80 chars) — PRIMARY
+  Colorful arrow path puzzles. Offline brain game. No timer. Tap, plan, clear.
+  Count: 78
+
+ALT short (A/B):
+  A) Free arrow puzzle. Colorful paths. Offline logic. No timer pressure.
+  B) Tap colorful arrows free. Path puzzle. Calm IQ brain game. Offline.
+  C) Bright path puzzles. Clear every arrow. Offline brain training. Free.
+
+FULL DESCRIPTION — INDIA (English, copy-paste ready)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ColorPath Out is a colorful arrow puzzle and path puzzle game that trains your
+logic, planning, and IQ — with no timer and full offline play.
+
+Your goal is simple: tap each colorful arrow so it slides off the board. An
+arrow escapes only when the path from its tip to the edge is clear. Tap the
+wrong one and you lose a heart. Clear every arrow to beat the level.
+
+If you love offline brain games, free logic puzzles, and calm tap puzzles with
+satisfying clears, ColorPath Out is built for you.
+
+HOW TO PLAY
+• Study the colorful paths on the grid
+• Find an arrow with a free exit to the edge
+• Tap to slide it out and open space for the others
+• Plan the order carefully — blocked taps cost hearts
+• Use a hint when you’re stuck
+• Clear every arrow to complete the level
+
+WHY COLORPATH OUT FEELS DIFFERENT
+Most arrow puzzle games are black-and-white and minimal. ColorPath Out is a
+bright color path puzzle you can read at a glance, with multiple themes so you
+can play sharp and focused or soft and relaxed.
+
+FEATURES
+• Hundreds of handcrafted colorful arrow path levels
+• Smooth tap-to-clear controls and clear wrong-move feedback
+• Hearts, undo, restart, and smart hints
+• Multiple visual themes
+• No timer — think at your own pace
+• Offline brain game — no Wi‑Fi needed after install
+• Free to play — fair ads, no cash-reward tricks
+• Quick sessions for a break, or longer sessions for deep focus
+
+PERFECT FOR
+• Fans of arrow puzzle, path puzzle, and logic puzzle games
+• Players who want a relaxing offline IQ / brain training game
+• Anyone who prefers colorful visuals over stark monochrome grids
+• Short coffee-break challenges and longer puzzle evenings
+
+Train your brain, protect your hearts, and clear every colorful path.
+Download ColorPath Out and push for a perfect heart score!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+------------------------------------------------------------------------------
+B) MYANMAR — SOFT LAUNCH / LOW CPI ASSIST (English listing)
+------------------------------------------------------------------------------
+
+MARKET NOTES
+  • Low competition for quality English arrow-path listings in MY
+  • Local top puzzles lean: color, tile match, water sort, brain / relax
+  • Users are price-sensitive + often offline → lead with free + offline
+  • Keep copy simpler / benefit-first (conversion > fancy prose)
+
+KEYWORD TIERS
+  TIER 1
+    free puzzle game | offline puzzle | color puzzle | brain game
+    arrow puzzle | logic puzzle | relaxing puzzle | no timer
+
+  TIER 2
+    colorful path | tap to clear | free offline game | calm puzzle
+    IQ game | stress relief puzzle | easy logic game
+
+TITLE (≤30 chars)
+  ColorPath Out: Arrow Puzzle
+
+  ALT:
+    A) ColorPath: Free Color Puzzle
+    B) ColorPath Out: Offline Puzzle
+
+SHORT DESCRIPTION (≤80 chars) — PRIMARY
+  Free colorful arrow puzzle. Offline brain game. No timer. Tap and clear.
+  Count: 76
+
+ALT short (A/B):
+  A) Color path puzzle. Free offline logic game. Calm brain training. No timer.
+  B) Tap arrows to escape. Bright color puzzle. Free. Offline. Easy to learn.
+
+FULL DESCRIPTION — MYANMAR (English, copy-paste ready)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ColorPath Out is a free colorful arrow puzzle — a calm offline brain game with
+no timer and easy tap controls.
+
+Tap each colorful arrow so it slides off the board. It only escapes when the
+path ahead is clear. Wrong tap = lose a heart. Clear every arrow to win.
+
+Perfect if you like free puzzle games, offline logic puzzles, color puzzles,
+and relaxing brain games you can play without Wi‑Fi.
+
+HOW TO PLAY
+• Look at the colorful paths
+• Find an arrow with a free way out
+• Tap to clear it and open space
+• Plan the order — think before you tap
+• Use a hint if you get stuck
+• Clear all arrows to finish the level
+
+WHY PLAY COLORPATH OUT
+Most arrow puzzles are plain black and white. ColorPath Out is bright and easy
+to read, with multiple color themes and handcrafted levels.
+
+FEATURES
+• Hundreds of colorful path puzzle levels
+• Simple tap-to-clear controls
+• Hearts, undo, restart, and hints
+• Multiple themes
+• No timer — play at your own pace
+• Offline puzzle — no Wi‑Fi after install
+• Free to play with fair ads
+• Great for short breaks or longer focus sessions
+
+WHO IT’S FOR
+• Arrow puzzle and logic puzzle fans
+• Players who want a free offline brain game
+• Anyone who loves colorful, relaxing puzzles
+• Easy start, deeper challenge as levels grow
+
+Train your brain, save your hearts, and clear every colorful path.
+Download ColorPath Out free and see how far you can go!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+------------------------------------------------------------------------------
+C) 90-DAY GEO PLAYBOOK FOR ~1M (India primary + Myanmar assist)
+------------------------------------------------------------------------------
+
+Days 1–14   Soft launch: Myanmar + Pakistan/Egypt (cheap CPI, retention QA)
+            Ship English IN + MY custom listings before spend
+Days 15–30  Open India. UAC learning. Optimize on level_10 / D1 — not raw installs
+Days 31–60  Scale India Tier-2/3 if D1≥35%, D7≥15%, CVR≥25%
+            Creative overlays: “Colorful arrow puzzle” / “Offline · No timer”
+Days 61–90  Push India chart rank + keep MY organic. Expand ID/PH/BR only
+            after India CPA stays in target
+
+CREATIVE TEXT OVERLAYS (ads + screenshots)
+  IN:  Colorful arrow puzzle | Offline brain game | No timer | Free
+  MY:  Free color puzzle | Offline | No timer | Tap to clear
+
+
+================================================================================
+11) RESEARCH SOURCES (sampled July 2026)
 ================================================================================
 
 Play Store pages:
@@ -357,12 +557,15 @@ Play Store pages:
   https://play.google.com/store/apps/details?id=com.colorarrowsout.puzzle
   https://play.google.com/store/apps/details?id=com.puzzlesparkstudio.flowarrows
   https://play.google.com/store/apps/details?id=com.arrowout.mazepuzzle
+  https://play.google.com/store/apps/details?hl=my&id=hexa.away.game.tap.block.off.color.puzzle.free
 
-Analytics / charts (secondary):
-  AppGoblin (Lessmore Arrows ~95M Android)
-  Ember Picks chart history (Lessmore top free puzzle ranks)
-  AppMagic / industry June 2026 download leaders (Arrows mechanic dominating top 5)
+Analytics / charts / market:
+  AppGoblin (Lessmore Arrows ~95M Android; top country IN)
+  AppMagic June 2026 (Arrows genre downloads India-driven)
+  Appfigures Myanmar puzzle free charts (tile/brain/color dominant)
+  India CPI 2026: casual ~₹6–20; mid-core puzzle ~₹20–50 (UAC/Meta blended)
 
 ================================================================================
 END OF FILE — ColorPath Out launch package
 ================================================================================
+
