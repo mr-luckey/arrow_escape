@@ -22,4 +22,13 @@ Clean Architecture + BLoC (no `setState`):
 
 ## Levels
 
-30 handcrafted solvable levels in `assets/levels/` (easy / medium / hard).
+1000 generated solvable levels in `assets/levels/` (easy / medium / hard), stored as:
+
+- `manifest.json` — metadata only (`id`, `name`, `difficulty`, `rows`, `cols`, `hearts`, owning chunk). Level select is built from this alone.
+- `levels_0001_0100.json` … `levels_0901_1000.json` — 100 full levels per chunk, read on demand when a level is opened. The whole chunk is cached, so nearby levels open without another read.
+
+`tool/level_store.py` owns that layout — generators call `load_all()` / `write_all()` instead of writing files themselves, and running it directly repacks whatever is on disk:
+
+```bash
+python3 tool/level_store.py
+```

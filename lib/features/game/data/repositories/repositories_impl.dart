@@ -13,6 +13,9 @@ class LevelRepositoryImpl implements LevelRepository {
 
   @override
   Future<LevelEntity> getLevel(int id) => _dataSource.loadById(id);
+
+  @override
+  Future<LevelEntity> getDemoLevel() => _dataSource.loadDemo();
 }
 
 class ProgressRepositoryImpl implements ProgressRepository {

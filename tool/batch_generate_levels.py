@@ -10,7 +10,6 @@ Rules:
 from __future__ import annotations
 
 import argparse
-import json
 import math
 import random
 import sys
@@ -23,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tool"))
 
 import generate_1000_levels as g  # noqa: E402
+import level_store  # noqa: E402
 
 OUT = ROOT / "assets" / "levels"
 BATCH = 100
@@ -191,37 +191,11 @@ def _worker(job):
 
 
 def load_existing() -> dict[int, dict]:
-    levels = {}
-    for p in OUT.glob("level_*.json"):
-        try:
-            lv = json.loads(p.read_text(encoding="utf-8"))
-            levels[int(lv["id"])] = lv
-        except Exception:
-            continue
-    return levels
+    return level_store.load_all(OUT)
 
 
 def write_manifest(levels: dict[int, dict]):
-    OUT.mkdir(parents=True, exist_ok=True)
-    meta = []
-    for lid in sorted(levels):
-        lv = levels[lid]
-        fname = f"level_{lid:04d}.json"
-        (OUT / fname).write_text(json.dumps(lv, separators=(",", ":")), encoding="utf-8")
-        meta.append(
-            {
-                "file": fname,
-                "id": lv["id"],
-                "name": lv["name"],
-                "difficulty": lv["difficulty"],
-                "rows": lv["rows"],
-                "cols": lv["cols"],
-                "hearts": lv.get("hearts", 3),
-            }
-        )
-    (OUT / "manifest.json").write_text(
-        json.dumps({"levels": meta}, indent=2), encoding="utf-8"
-    )
+    level_store.write_all(levels, levels_dir=OUT)
 
 
 def validate_range(levels: dict[int, dict], start: int, end: int) -> list[str]:

@@ -9,9 +9,12 @@ class LevelAssetDataSource {
   LevelAssetDataSource({AssetBundle? bundle})
       : _bundle = bundle ?? rootBundle;
 
+  static const demoAsset = 'assets/levels/demo_level.json';
+
   final AssetBundle _bundle;
   List<LevelEntity>? _index;
   final Map<int, LevelEntity> _fullCache = {};
+  LevelEntity? _demoCache;
   late Map<int, String> _fileById;
 
   Future<List<LevelEntity>> loadAll() async {
@@ -71,8 +74,38 @@ class LevelAssetDataSource {
     }
     final raw = await _bundle.loadString('assets/levels/$file');
     final json = jsonDecode(raw) as Map<String, dynamic>;
+
+    final chunk = json['levels'];
+    if (chunk is! List) {
+      final entity = LevelModel.fromJson(json).toEntity();
+      _fullCache[id] = entity;
+      return entity;
+    }
+
+    // A chunk holds up to 100 levels, so caching all of them makes the
+    // neighbouring levels free to open.
+    for (final entry in chunk) {
+      final entity =
+          LevelModel.fromJson(entry as Map<String, dynamic>).toEntity();
+      _fullCache[entity.id] = entity;
+    }
+    final entity = _fullCache[id];
+    if (entity == null) {
+      throw StateError('Level $id missing from $file');
+    }
+    return entity;
+  }
+
+  /// Showcase board for the marketing demo. Deliberately kept out of the
+  /// manifest so it never shows up in level select or shifts the level count.
+  Future<LevelEntity> loadDemo() async {
+    final cached = _demoCache;
+    if (cached != null) return cached;
+
+    final raw = await _bundle.loadString(demoAsset);
+    final json = jsonDecode(raw) as Map<String, dynamic>;
     final entity = LevelModel.fromJson(json).toEntity();
-    _fullCache[id] = entity;
+    _demoCache = entity;
     return entity;
   }
 }

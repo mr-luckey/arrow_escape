@@ -11,16 +11,25 @@ import '../../../../core/theme/app_theme_extension.dart';
 import '../../../../core/widgets/app_widgets.dart';
 import '../../../levels/presentation/bloc/progress_cubit.dart';
 import '../../../settings/presentation/bloc/settings_cubit.dart';
+import '../../domain/entities/game_entities.dart';
 import '../../domain/usecases/game_usecases.dart';
 import '../bloc/game_bloc.dart';
+import '../widgets/demo_overlay.dart';
 import '../widgets/game_board.dart';
 import '../widgets/game_hud.dart';
 import '../widgets/hint_pulse.dart';
 
+/// Level opened by the marketing demo from the home screen.
+const kDemoLevelId = 999;
+
 class GamePage extends StatelessWidget {
-  const GamePage({super.key, required this.levelId});
+  const GamePage({super.key, required this.levelId, this.demoMode = false});
 
   final int levelId;
+
+  /// Auto-plays the level with an animated cartoon hand, for recording promo
+  /// footage. Saved progress and interstitials are left untouched.
+  final bool demoMode;
 
   @override
   Widget build(BuildContext context) {
@@ -32,15 +41,137 @@ class GamePage extends StatelessWidget {
           progressRepository: sl(),
           applyMove: sl<ApplyMoveUseCase>(),
           getHint: sl(),
+          demoMode: demoMode,
         )..add(GameStarted(levelId));
       },
-      child: const _GameView(),
+      child: _GameView(demoMode: demoMode),
     );
   }
 }
 
-class _GameView extends StatelessWidget {
-  const _GameView();
+class _GameView extends StatefulWidget {
+  const _GameView({required this.demoMode});
+
+  final bool demoMode;
+
+  @override
+  State<_GameView> createState() => _GameViewState();
+}
+
+class _GameViewState extends State<_GameView> {
+  // Demo pacing. A move is: travel → press → tap → short gap, and the board's
+  // own exit animation (420ms) overlaps the travel to the next arrow.
+  static const _handTravel = Duration(milliseconds: 340);
+  static const _handPress = Duration(milliseconds: 120);
+  static const _afterTap = Duration(milliseconds: 80);
+  static const _demoIntro = Duration(milliseconds: 900);
+  static const _demoRestart = Duration(milliseconds: 5200);
+
+  Cell? _handCell;
+  int _tapSeq = 0;
+  bool _handPressed = false;
+  bool _demoRunning = false;
+  bool _disposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.demoMode) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _runDemo());
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  Future<bool> _wait(Duration duration) async {
+    await Future<void>.delayed(duration);
+    return mounted && !_disposed;
+  }
+
+  /// Blocks until the bloc can accept another tap (the previous arrow has
+  /// finished sliding off the board).
+  Future<bool> _waitForPlaying(
+    GameBloc bloc, {
+    bool abortWhenFinished = true,
+    int maxTicks = 200,
+  }) async {
+    for (var i = 0; i < maxTicks; i++) {
+      if (!mounted || _disposed) return false;
+      final status = bloc.state.status;
+      if (status == GameStatus.playing) return true;
+      if (status == GameStatus.error) return false;
+      if (abortWhenFinished &&
+          (status == GameStatus.won || status == GameStatus.lost)) {
+        return false;
+      }
+      if (!await _wait(const Duration(milliseconds: 16))) return false;
+    }
+    return false;
+  }
+
+  Future<void> _runDemo() async {
+    if (_demoRunning) return;
+    _demoRunning = true;
+    final bloc = context.read<GameBloc>();
+    final getHint = sl<GetHintUseCase>();
+
+    while (!_disposed) {
+      // Level load (and the pause after a restart) can outlast a normal move.
+      final ready = await _waitForPlaying(
+        bloc,
+        abortWhenFinished: false,
+        maxTicks: 900,
+      );
+      if (!ready) return;
+      final level = bloc.state.level;
+      if (level == null) return;
+
+      if (!await _wait(_demoIntro)) return;
+
+      // The generator guarantees every level is constructively solvable, so
+      // repeatedly taking any currently-escapable arrow always clears it.
+      var pending = List<ArrowEntity>.of(bloc.state.arrows);
+      while (!_disposed) {
+        // Self-heal from resets or stray input between moves.
+        if (bloc.state.status == GameStatus.playing) {
+          pending = List<ArrowEntity>.of(bloc.state.arrows);
+        }
+        final id = getHint(
+          arrows: pending,
+          rows: level.rows,
+          cols: level.cols,
+        );
+        if (id == null) break;
+
+        setState(() => _handCell = pending.firstWhere((a) => a.id == id).head);
+        if (!await _wait(_handTravel)) return;
+
+        setState(() => _handPressed = true);
+        if (!await _wait(_handPress)) return;
+        if (!await _waitForPlaying(bloc)) return;
+
+        setState(() {
+          _handPressed = false;
+          _tapSeq++;
+        });
+        bloc.add(ArrowTapped(id));
+        pending = pending.where((a) => a.id != id).toList();
+
+        if (!await _wait(_afterTap)) return;
+      }
+
+      setState(() => _handCell = null);
+
+      // Loop the showcase so a single recording can capture several runs.
+      if (!await _wait(_demoRestart)) return;
+      bloc.add(GameStarted(level.id));
+      if (!await _wait(const Duration(milliseconds: 300))) return;
+    }
+  }
 
   Future<void> _onHint(BuildContext context) async {
     final ads = sl<AdsService>();
@@ -51,6 +182,8 @@ class _GameView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final demo = widget.demoMode;
+
     return GradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -101,13 +234,17 @@ class _GameView extends StatelessWidget {
               if (state.status == GameStatus.won) {
                 audio.playWin();
                 haptics.heavy();
-                context.read<ProgressCubit>().refresh();
-                sl<AdsService>().maybeShowInterstitialOnLevelEnd();
+                if (!demo) {
+                  context.read<ProgressCubit>().refresh();
+                  sl<AdsService>().maybeShowInterstitialOnLevelEnd();
+                }
               } else if (state.status == GameStatus.lost) {
                 audio.playLose();
                 haptics.heavy();
-                context.read<ProgressCubit>().refresh();
-                sl<AdsService>().maybeShowInterstitialOnLevelEnd();
+                if (!demo) {
+                  context.read<ProgressCubit>().refresh();
+                  sl<AdsService>().maybeShowInterstitialOnLevelEnd();
+                }
               }
             },
             builder: (context, state) {
@@ -140,7 +277,8 @@ class _GameView extends StatelessWidget {
                                 levelLabel: 'LEVEL ${level.id}',
                                 hearts: state.hearts,
                                 maxHearts: state.maxHearts,
-                                onBack: () => context.go('/levels'),
+                                onBack: () =>
+                                    context.go(demo ? '/' : '/levels'),
                                 onReset: () => context
                                     .read<GameBloc>()
                                     .add(const ResetRequested()),
@@ -158,6 +296,9 @@ class _GameView extends StatelessWidget {
                                   elevation: 10,
                                   borderRadius: 22,
                                   padding: const EdgeInsets.all(12),
+                                  // Let the demo hand hang past the board edge.
+                                  clipBehavior:
+                                      demo ? Clip.none : Clip.antiAlias,
                                   child: ExitAnimationGate(
                                     status: state.status,
                                     animationKey:
@@ -184,8 +325,9 @@ class _GameView extends StatelessWidget {
                                                 state.lastRemovedArrowId,
                                             exitProgress: progress,
                                             hintPulse: pulse,
-                                            enabled: state.status ==
-                                                GameStatus.playing,
+                                            enabled: !demo &&
+                                                state.status ==
+                                                    GameStatus.playing,
                                             onArrowTapped: (id) {
                                               sl<HapticsService>().setEnabled(
                                                 context
@@ -198,6 +340,22 @@ class _GameView extends StatelessWidget {
                                                   .read<GameBloc>()
                                                   .add(ArrowTapped(id));
                                             },
+                                            overlayBuilder: !demo
+                                                ? null
+                                                : (context, boardSize) {
+                                                    return DemoBoardOverlay(
+                                                      boardSize: boardSize,
+                                                      rows: level.rows,
+                                                      cols: level.cols,
+                                                      target: _handCell,
+                                                      tapSeq: _tapSeq,
+                                                      pressed: _handPressed,
+                                                      palette:
+                                                          colors.arrowPalette,
+                                                      accent: colors.primary,
+                                                      travel: _handTravel,
+                                                    );
+                                                  },
                                           );
 
                                           return board;
@@ -220,6 +378,10 @@ class _GameView extends StatelessWidget {
                             ),
                           ],
                         ),
+                        if (demo && state.status == GameStatus.won)
+                          Positioned.fill(
+                            child: DemoConfetti(palette: colors.arrowPalette),
+                          ),
                         if (state.status == GameStatus.won)
                           WinOverlay(
                             stars: state.earnedStars,
@@ -247,7 +409,7 @@ class _GameView extends StatelessWidget {
                     ),
                   ),
                   // Banner stays plain — no card/elevation around ads.
-                  const BannerAdWidget(height: 50),
+                  if (!demo) const BannerAdWidget(height: 50),
                   SizedBox(height: MediaQuery.paddingOf(context).bottom),
                 ],
               );

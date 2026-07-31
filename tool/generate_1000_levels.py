@@ -8,13 +8,14 @@ Rules:
 """
 from __future__ import annotations
 
-import json
 import math
 import random
 import time
 from collections import deque
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
+
+import level_store
 
 OUT = Path("assets/levels")
 DIRS = {"U": (-1, 0), "D": (1, 0), "L": (0, -1), "R": (0, 1)}
@@ -1038,29 +1039,7 @@ INTROS = [
 
 
 def save_all(levels):
-    OUT.mkdir(parents=True, exist_ok=True)
-    # Remove old level_*.json to avoid leftovers (keep folder).
-    for p in OUT.glob("level_*.json"):
-        p.unlink()
-
-    meta = []
-    for lv in sorted(levels, key=lambda x: x["id"]):
-        fname = f"level_{lv['id']:04d}.json"
-        (OUT / fname).write_text(json.dumps(lv, separators=(",", ":")), encoding="utf-8")
-        meta.append(
-            {
-                "file": fname,
-                "id": lv["id"],
-                "name": lv["name"],
-                "difficulty": lv["difficulty"],
-                "rows": lv["rows"],
-                "cols": lv["cols"],
-                "hearts": lv["hearts"],
-            }
-        )
-    (OUT / "manifest.json").write_text(
-        json.dumps({"levels": meta}, indent=2), encoding="utf-8"
-    )
+    level_store.write_all(levels, levels_dir=OUT)
 
 
 def main():

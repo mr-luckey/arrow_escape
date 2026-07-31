@@ -28,7 +28,12 @@ GoRouter createRouter() {
         path: '/game/:id',
         builder: (context, state) {
           final id = int.tryParse(state.pathParameters['id'] ?? '1') ?? 1;
-          return GamePage(key: ValueKey(id), levelId: id);
+          final demo = state.uri.queryParameters['demo'] == '1';
+          return GamePage(
+            key: ValueKey('$id-$demo'),
+            levelId: id,
+            demoMode: demo,
+          );
         },
       ),
       GoRoute(

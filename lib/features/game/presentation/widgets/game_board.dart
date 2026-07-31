@@ -21,6 +21,7 @@ class GameBoard extends StatelessWidget {
     this.exitProgress = 0,
     this.hintPulse = 0,
     this.enabled = true,
+    this.overlayBuilder,
   });
 
   final int rows;
@@ -34,6 +35,10 @@ class GameBoard extends StatelessWidget {
   final double exitProgress;
   final double hintPulse;
   final bool enabled;
+
+  /// Painted on top of the board in the board's own coordinate space, so cell
+  /// centers can be resolved the same way the painter resolves them.
+  final Widget Function(BuildContext context, Size boardSize)? overlayBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -78,20 +83,29 @@ class GameBoard extends StatelessWidget {
                         if (id != null) onArrowTapped(id);
                       }
                     : null,
-                child: CustomPaint(
-                  isComplex: true,
-                  willChange: hintArrowId != null || exitProgress > 0,
-                  painter: BoardPainter(
-                    rows: rows,
-                    cols: cols,
-                    arrows: arrows,
-                    arrowColors: arrowColors,
-                    hintArrowId: hintArrowId,
-                    failedArrowId: failedArrowId,
-                    removedArrowId: removedArrowId,
-                    exitProgress: exitProgress,
-                    hintPulse: hintPulse,
-                  ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: CustomPaint(
+                        isComplex: true,
+                        willChange: hintArrowId != null || exitProgress > 0,
+                        painter: BoardPainter(
+                          rows: rows,
+                          cols: cols,
+                          arrows: arrows,
+                          arrowColors: arrowColors,
+                          hintArrowId: hintArrowId,
+                          failedArrowId: failedArrowId,
+                          removedArrowId: removedArrowId,
+                          exitProgress: exitProgress,
+                          hintPulse: hintPulse,
+                        ),
+                      ),
+                    ),
+                    if (overlayBuilder != null)
+                      Positioned.fill(child: overlayBuilder!(context, size)),
+                  ],
                 ),
               ),
             ),

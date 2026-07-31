@@ -8,9 +8,10 @@ constructive solvability so no level becomes impossible.
 """
 from __future__ import annotations
 
-import json
 import random
 from pathlib import Path
+
+import level_store
 
 ROOT = Path(__file__).resolve().parents[1]
 LEVELS = ROOT / "assets" / "levels"
@@ -155,31 +156,19 @@ def harden(lv: dict) -> tuple[dict, int]:
 
 
 def main() -> None:
-    files = sorted(LEVELS.glob("level_*.json"))
+    levels = level_store.load_all(LEVELS)
     total_flip = 0
     changed = 0
-    for path in files:
-        lv = json.loads(path.read_text())
-        hardened, n = harden(lv)
+    for level_id in sorted(levels):
+        hardened, n = harden(levels[level_id])
         if n:
-            path.write_text(json.dumps(hardened, separators=(",", ":")) + "\n")
+            levels[level_id] = hardened
             total_flip += n
             changed += 1
-            print(f"{path.name}: flipped {n}")
-    # Refresh manifest difficulty fields from files.
-    manifest_path = LEVELS / "manifest.json"
-    if manifest_path.exists():
-        manifest = json.loads(manifest_path.read_text())
-        by_file = {
-            p.name: json.loads(p.read_text())
-            for p in files
-        }
-        for entry in manifest.get("levels", []):
-            f = entry.get("file")
-            if f in by_file:
-                entry["difficulty"] = by_file[f].get("difficulty", entry.get("difficulty"))
-                entry["name"] = by_file[f].get("name", entry.get("name"))
-        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+            print(f"level {level_id}: flipped {n}")
+    if changed:
+        # write_all rebuilds the manifest, so difficulty/name stay in sync.
+        level_store.write_all(levels, levels_dir=LEVELS)
     print(f"done: {changed} levels updated, {total_flip} tips flipped")
 
 

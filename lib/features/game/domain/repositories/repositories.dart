@@ -3,6 +3,9 @@ import '../entities/game_entities.dart';
 abstract class LevelRepository {
   Future<List<LevelEntity>> getAllLevels();
   Future<LevelEntity> getLevel(int id);
+
+  /// Showcase board played by the auto-demo, outside the normal progression.
+  Future<LevelEntity> getDemoLevel();
 }
 
 abstract class ProgressRepository {

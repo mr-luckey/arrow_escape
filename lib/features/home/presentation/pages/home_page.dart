@@ -12,6 +12,7 @@ import '../../../../core/store/app_store_service.dart';
 import '../../../../core/store/rate_app_dialog.dart';
 import '../../../../core/theme/app_theme_extension.dart';
 import '../../../../core/widgets/app_widgets.dart';
+import '../../../game/presentation/pages/game_page.dart';
 import '../../../levels/presentation/bloc/progress_cubit.dart';
 
 class HomePage extends StatefulWidget {
@@ -113,6 +114,11 @@ class _HomePageState extends State<HomePage> {
                         label: 'Level Select',
                         onPressed: () => context.go('/levels'),
                       ),
+                      const SizedBox(height: 12),
+                      _DemoButton(
+                        onPressed: () =>
+                            context.go('/game/$kDemoLevelId?demo=1'),
+                      ),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -160,5 +166,54 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+}
+
+/// Launches the auto-played showcase run used for promo recordings.
+class _DemoButton extends StatelessWidget {
+  const _DemoButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Material(
+      color: colors.onSurface.withValues(alpha: 0.82),
+      elevation: 3,
+      shadowColor: colors.primary.withValues(alpha: 0.35),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(18),
+        child: SizedBox(
+          height: 52,
+          width: double.infinity,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.play_circle_outline_rounded,
+                  size: 22, color: colors.accent),
+              const SizedBox(width: 10),
+              const Text(
+                'Watch Demo · Level $kDemoLevelId',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(delay: 120.ms, duration: 350.ms)
+        .shimmer(
+          delay: 900.ms,
+          duration: 1600.ms,
+          color: colors.accent.withValues(alpha: 0.35),
+        );
   }
 }

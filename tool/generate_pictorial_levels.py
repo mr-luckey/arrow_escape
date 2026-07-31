@@ -2,9 +2,10 @@
 """Dense pictorial levels: 30+ long bent arrows packed into recognizable silhouettes."""
 from __future__ import annotations
 
-import json
 import random
 from pathlib import Path
+
+import level_store
 
 out = Path("assets/levels")
 DIRS = {"U": (-1, 0), "D": (1, 0), "L": (0, -1), "R": (0, 1)}
@@ -357,12 +358,8 @@ def try_dense(lid, name, diff, rows, cols, mask, min_arrows, seed0, **kwargs):
 
 
 def save_levels(levels):
-    files = []
-    for lv in sorted(levels, key=lambda x: x["id"]):
-        fname = f"level_{lv['id']:02d}.json"
-        files.append(fname)
-        (out / fname).write_text(json.dumps(lv, indent=2))
-    (out / "manifest.json").write_text(json.dumps({"levels": files}, indent=2))
+    """Replace the whole level store with this prototype set."""
+    level_store.write_all(levels, levels_dir=out)
 
 
 def paw_mask(rows=28, cols=26):

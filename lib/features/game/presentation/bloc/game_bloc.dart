@@ -149,6 +149,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     required ProgressRepository progressRepository,
     required ApplyMoveUseCase applyMove,
     required GetHintUseCase getHint,
+    this.demoMode = false,
   })  : _levelRepository = levelRepository,
         _progressRepository = progressRepository,
         _applyMove = applyMove,
@@ -162,6 +163,9 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<AnimationCompleted>(_onAnimationCompleted);
   }
 
+  /// Showcase run: play the level normally but never touch saved progress.
+  final bool demoMode;
+
   final LevelRepository _levelRepository;
   final ProgressRepository _progressRepository;
   final ApplyMoveUseCase _applyMove;
@@ -170,7 +174,9 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   Future<void> _onStarted(GameStarted event, Emitter<GameState> emit) async {
     emit(const GameState(status: GameStatus.loading));
     try {
-      final level = await _levelRepository.getLevel(event.levelId);
+      final level = demoMode
+          ? await _levelRepository.getDemoLevel()
+          : await _levelRepository.getLevel(event.levelId);
       emit(GameState(
         status: GameStatus.playing,
         level: level,
@@ -274,10 +280,11 @@ class GameBloc extends Bloc<GameEvent, GameState> {
         : state.arrows.where((a) => a.id != removedId).toList();
 
     if (nextArrows.isEmpty) {
-      final level = state.level!;
-      final stars = state.earnedStars;
-      await _progressRepository.setStars(level.id, stars);
-      await _progressRepository.unlockLevel(level.id + 1);
+      if (!demoMode) {
+        final level = state.level!;
+        await _progressRepository.setStars(level.id, state.earnedStars);
+        await _progressRepository.unlockLevel(level.id + 1);
+      }
       emit(state.copyWith(
         status: GameStatus.won,
         arrows: nextArrows,
