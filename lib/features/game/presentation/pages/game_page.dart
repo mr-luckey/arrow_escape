@@ -25,12 +25,15 @@ class GamePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => GameBloc(
-        levelRepository: sl(),
-        progressRepository: sl(),
-        applyMove: sl<ApplyMoveUseCase>(),
-        getHint: sl(),
-      )..add(GameStarted(levelId)),
+      create: (_) {
+        sl<AudioService>().prepareLevelTune(levelId);
+        return GameBloc(
+          levelRepository: sl(),
+          progressRepository: sl(),
+          applyMove: sl<ApplyMoveUseCase>(),
+          getHint: sl(),
+        )..add(GameStarted(levelId));
+      },
       child: const _GameView(),
     );
   }
@@ -76,9 +79,16 @@ class _GameView extends StatelessWidget {
                 context.read<SettingsCubit>().state.hapticsEnabled,
               );
 
+              final level = state.level;
               if (state.status == GameStatus.animating &&
-                  state.lastRemovedArrowId != null) {
-                audio.playEscape();
+                  state.lastRemovedArrowId != null &&
+                  level != null) {
+                // The escaping arrow is still on the board at this point, so
+                // the count of already-cleared arrows is the note to strike.
+                audio.playArrowNote(
+                  levelId: level.id,
+                  index: level.arrows.length - state.arrows.length,
+                );
                 haptics.light();
               }
 

@@ -29,10 +29,14 @@ class AdsService {
 
   Future<void> init() async {
     if (kIsWeb) return;
-    await MobileAds.instance.initialize();
-    _ready = true;
-    unawaited(preloadInterstitial());
-    unawaited(preloadRewarded());
+    try {
+      await MobileAds.instance.initialize();
+      _ready = true;
+      unawaited(preloadInterstitial());
+      unawaited(preloadRewarded());
+    } catch (_) {
+      _ready = false;
+    }
   }
 
   bool get isReady => _ready;

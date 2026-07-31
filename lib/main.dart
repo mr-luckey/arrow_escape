@@ -14,6 +14,9 @@ Future<void> main() async {
   ]);
   await configureDependencies();
   await sl<AudioService>().init();
-  await sl<AdsService>().init();
+  // Never block / crash launch if ads SDK fails (Play pre-launch devices).
+  try {
+    await sl<AdsService>().init();
+  } catch (_) {}
   runApp(ColorPathOutApp());
 }

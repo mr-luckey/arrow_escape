@@ -3,7 +3,7 @@
 
 Rules:
   - Levels 1–5: softer intros (kept recognizable & lighter)
-  - Levels 6–1000: ≥40 arrows, max path length 8, unique clear silhouette
+  - Levels 6–1000: ≥40 arrows, path length 4–8, unique clear silhouette
   - No repeated level id / shape name
 """
 from __future__ import annotations
@@ -12,12 +12,16 @@ import json
 import math
 import random
 import time
+from collections import deque
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 OUT = Path("assets/levels")
 DIRS = {"U": (-1, 0), "D": (1, 0), "L": (0, -1), "R": (0, 1)}
 DIR_LIST = list(DIRS.items())
+
+# Shortest arrow allowed anywhere. Two-cell stubs read as noise on the board.
+MIN_PATH = 4
 
 
 def tip_dir(path: list) -> str:
@@ -65,7 +69,9 @@ def validate_layout(lv: dict) -> str | None:
             r, c = cell
             if not (0 <= r < lv["rows"] and 0 <= c < lv["cols"]):
                 return f"oob {a['id']} {t}"
-        if len(a["path"]) < 2 or tip_dir(a["path"]) != a["direction"]:
+        if len(a["path"]) < MIN_PATH:
+            return f"too short {a['id']} ({len(a['path'])})"
+        if tip_dir(a["path"]) != a["direction"]:
             return f"bad tip {a['id']}"
     # Constructive solvability: reverse placement order (dense_fill guarantees this).
     remaining = list(lv["arrows"])
@@ -211,6 +217,151 @@ def grow_inward_from_tip(tip, tip_d, mask, occupied, rows, cols, rr, length, ben
     return body
 
 
+def exit_ray(head, direction, rows, cols):
+    dr, dc = DIRS[direction]
+    r, c = head[0] + dr, head[1] + dc
+    while 0 <= r < rows and 0 <= c < cols:
+        yield (r, c)
+        r += dr
+        c += dc
+
+
+def depth_map(mask, rows, cols):
+    """Cell -> steps to the nearest edge of the silhouette."""
+    depth = {c: 0 for c in mask if is_boundary(c, mask, rows, cols)}
+    queue = deque(depth)
+    while queue:
+        cur = queue.popleft()
+        for nb in neighbors(cur[0], cur[1], rows, cols):
+            if nb in mask and nb not in depth:
+                depth[nb] = depth[cur] + 1
+                queue.append(nb)
+    return depth
+
+
+def orphaned_cells(free_cells, min_len, rows, cols):
+    """Count free cells sitting in pockets too small to hold an arrow."""
+    seen = set()
+    total = 0
+    for cell in free_cells:
+        if cell in seen:
+            continue
+        stack = [cell]
+        seen.add(cell)
+        size = 0
+        while stack:
+            r, c = stack.pop()
+            size += 1
+            for nb in neighbors(r, c, rows, cols):
+                if nb in free_cells and nb not in seen:
+                    seen.add(nb)
+                    stack.append(nb)
+        if size < min_len:
+            total += size
+    return total
+
+
+def solve_order(arrows, rows, cols):
+    """Greedy clear of the whole board, returning the escape order or None.
+
+    Removing an arrow only frees cells, so a greedy sweep can never paint
+    itself into a corner: if any full solution exists this finds one.
+    """
+    owner = {}
+    for i, a in enumerate(arrows):
+        for cell in a["path"]:
+            owner[tuple(cell)] = i
+
+    remaining = set(range(len(arrows)))
+    order = []
+    progress = True
+    while remaining and progress:
+        progress = False
+        for i in sorted(remaining):
+            a = arrows[i]
+            head = tuple(a["path"][-1])
+            if any(
+                owner.get(cell, i) != i
+                for cell in exit_ray(head, a["direction"], rows, cols)
+            ):
+                continue
+            for cell in a["path"]:
+                owner.pop(tuple(cell), None)
+            remaining.discard(i)
+            order.append(i)
+            progress = True
+    return order if not remaining else None
+
+
+def plan_absorptions(arrows, mask, occupied, max_len):
+    """Queue tail extensions that would cover leftover cells.
+
+    Prepending never changes an arrow's tip direction, so the only risk is the
+    extra cell blocking someone else's exit — the caller checks that.
+    """
+    occ = set(occupied)
+    lengths = [len(a["path"]) for a in arrows]
+    tails = [tuple(a["path"][0]) for a in arrows]
+    order = sorted(range(len(arrows)), key=lambda i: lengths[i])
+    ops = []
+
+    progress = True
+    while progress:
+        progress = False
+        for cell in [c for c in mask if c not in occ]:
+            # Shortest neighbour first, so lengths even out instead of one
+            # arrow eating every hole.
+            order.sort(key=lambda i: lengths[i])
+            for i in order:
+                if lengths[i] >= max_len:
+                    continue
+                tr, tc = tails[i]
+                if abs(tr - cell[0]) + abs(tc - cell[1]) != 1:
+                    continue
+                ops.append((i, cell))
+                occ.add(cell)
+                tails[i] = cell
+                lengths[i] += 1
+                progress = True
+                break
+    return ops
+
+
+def apply_absorptions(arrows, base_paths, ops, count):
+    for a, base in zip(arrows, base_paths):
+        a["path"] = [list(p) for p in base]
+    for i, cell in ops[:count]:
+        arrows[i]["path"].insert(0, [cell[0], cell[1]])
+
+
+def absorb_leftovers(arrows, mask, occupied, rows, cols, max_len):
+    """Fill holes by growing tails, keeping as many as stay solvable."""
+    ops = plan_absorptions(arrows, mask, occupied, max_len)
+    if not ops:
+        return solve_order(arrows, rows, cols)
+
+    base_paths = [[list(p) for p in a["path"]] for a in arrows]
+    apply_absorptions(arrows, base_paths, ops, len(ops))
+    order = solve_order(arrows, rows, cols)
+    if order is not None:
+        return order
+
+    # Extra cells only ever block, so solvability is monotone in the op count.
+    lo, best_order = 0, None
+    hi = len(ops)
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        apply_absorptions(arrows, base_paths, ops, mid)
+        order = solve_order(arrows, rows, cols)
+        if order is None:
+            hi = mid - 1
+        else:
+            lo = mid
+            best_order = order
+    apply_absorptions(arrows, base_paths, ops, lo)
+    return best_order if best_order is not None else solve_order(arrows, rows, cols)
+
+
 def dense_fill(
     mask,
     rows,
@@ -218,36 +369,33 @@ def dense_fill(
     seed,
     *,
     min_arrows,
-    min_len=3,
+    min_len=MIN_PATH,
     max_len=8,
     bend_bias=0.78,
-    cover_target=0.9,
     attempts_per=28,
 ):
     rr = random.Random(seed)
     occupied: set = set()
     arrows: list = []
-    soft_min = min(min_len, max_len)
+    soft_min = max(MIN_PATH, min(min_len, max_len))
     stall = 0
+
+    depth = depth_map(mask, rows, cols)
 
     while stall < 55:
         free = [c for c in mask if c not in occupied]
         if len(free) < soft_min:
-            if soft_min > 2:
-                soft_min -= 1
-                stall = 0
-                continue
             break
 
         rem_mask = mask - occupied
-        boundary = [c for c in free if is_boundary(c, rem_mask, rows, cols)]
-        if not boundary:
-            boundary = free
+        # Deepest cells first: an arrow only escapes past the ones placed
+        # before it, so the fill has to grow from the core outwards.
+        deepest = max(depth.get(c, 0) for c in free)
+        pool = [c for c in free if depth.get(c, 0) >= deepest - 1] or free
 
-        best = None
-        best_score = -1
+        candidates = []
         for _ in range(attempts_per):
-            tip = rr.choice(boundary)
+            tip = rr.choice(pool)
             outs = outward_dirs(tip, rem_mask, rows, cols) or [d for d, _ in DIR_LIST]
             tip_d = rr.choice(outs)
             target = rr.randint(soft_min, min(max_len, max(soft_min, len(free))))
@@ -257,12 +405,14 @@ def dense_fill(
             if body is None or len(body) < soft_min:
                 start = rr.choice(free)
                 raw = grow_bent_path(start, mask, occupied, rows, cols, rr, target, bend_bias)
-                if not raw:
+                if not raw or len(raw) < soft_min:
                     continue
                 body = placeable(raw, occupied, rows, cols)
                 if not body:
                     continue
             elif not clear_exit(body[-1], tip_dir(body), occupied, rows, cols):
+                continue
+            if not (soft_min <= len(body) <= max_len):
                 continue
             # Prefer longer exits / inward tips so edge arrows aren't free wins.
             d = tip_dir(body)
@@ -274,49 +424,53 @@ def dense_fill(
                 exit_run += 1
                 rr0 += dr
                 cc0 += dc
-            score = len(body) * 2 + min(exit_run, 8)
-            outs = outward_dirs(tuple(head), mask, rows, cols)
-            if d in outs and exit_run <= 1:
+            score = len(body) + min(exit_run, 8)
+            if d in outward_dirs(tuple(head), mask, rows, cols) and exit_run <= 1:
                 score -= 4
-            if score > best_score:
-                best_score = score
-                best = body
+            candidates.append((score, body))
 
-        if best is None:
+        if not candidates:
             stall += 1
-            if stall % 8 == 0 and soft_min > 2:
-                soft_min -= 1
             continue
+
+        candidates.sort(key=lambda x: -x[0])
+        best = None
+        best_cost = None
+        for score, body in candidates[:8]:
+            orphans = orphaned_cells(rem_mask - set(map(tuple, body)), soft_min, rows, cols)
+            cost = orphans * 3 - score
+            if best_cost is None or cost < best_cost:
+                best_cost = cost
+                best = body
+            if orphans == 0:
+                break
 
         stall = 0
         arrows.append(A(f"a{len(arrows) + 1}", best, len(arrows)))
         occupied.update(map(tuple, best))
         cover = len(occupied) / max(len(mask), 1)
-        if len(arrows) >= min_arrows and cover >= cover_target:
-            soft_min = max(2, soft_min - 1)
-            if cover >= 0.96:
-                break
+        if len(arrows) >= min_arrows and cover >= 0.96:
+            break
 
-    soft_min = 2
     for _ in range(160):
         free = [c for c in mask if c not in occupied]
-        if len(free) < 2:
+        if len(free) < soft_min:
             break
         tip = rr.choice(free)
         rem = mask - occupied
         outs = outward_dirs(tip, rem, rows, cols) or [d for d, _ in DIR_LIST]
-        want = rr.randint(2, max_len)
+        want = rr.randint(soft_min, max_len)
         body = grow_inward_from_tip(
             tip, rr.choice(outs), mask, occupied, rows, cols, rr, want, 0.7
         )
         if body is None:
             raw = grow_bent_path(
-                rr.choice(free), mask, occupied, rows, cols, rr, min(4, max_len), 0.7
+                rr.choice(free), mask, occupied, rows, cols, rr, max_len, 0.7
             )
             body = placeable(raw, occupied, rows, cols) if raw else None
         if (
             body is None
-            or len(body) > max_len
+            or not (soft_min <= len(body) <= max_len)
             or not clear_exit(body[-1], tip_dir(body), occupied, rows, cols)
         ):
             continue
@@ -325,7 +479,13 @@ def dense_fill(
 
     if len(arrows) < max(8, int(min_arrows * 0.55)):
         return None
-    return arrows
+
+    order = absorb_leftovers(arrows, mask, occupied, rows, cols, max_len)
+    if order is None:
+        return None
+    # validate_layout replays escapes in reverse list order.
+    ordered = [arrows[i] for i in reversed(order)]
+    return [A(f"a{n + 1}", a["path"], n) for n, a in enumerate(ordered)]
 
 
 # ---------------------------------------------------------------------------
@@ -798,25 +958,25 @@ def try_level(lid, name, diff, rows, cols, mask, min_arrows, max_len, seed0, sof
     for i, seed in enumerate(range(seed0, seed0 + seeds)):
         # Pack denser with shorter strokes after a few misses to hit min_arrows.
         use_len = max_len
-        if not soft and i >= 5:
+        if i >= 5:
+            use_len = min(max_len, 6)
+        if i >= 14:
             use_len = min(max_len, 5)
-        if not soft and i >= 14:
-            use_len = min(max_len, 4)
+        use_len = max(MIN_PATH, use_len)
         arrows = dense_fill(
             mask,
             rows,
             cols,
             seed,
             min_arrows=min_arrows,
-            min_len=2 if use_len <= 4 else 3,
+            min_len=MIN_PATH,
             max_len=use_len,
             bend_bias=0.72,
-            cover_target=0.8,
             attempts_per=32,
         )
         if not arrows:
             continue
-        if any(len(a["path"]) > max_len for a in arrows):
+        if any(not (MIN_PATH <= len(a["path"]) <= max_len) for a in arrows):
             continue
         if not soft and len(arrows) < min_arrows:
             if best is None or len(arrows) > len(best):
@@ -851,8 +1011,8 @@ def _worker(job):
 
 
 INTROS = [
-    (1, "Spark", "easy", 14, 14, lambda: oval(14, 14, 7, 7, 6, 6), 14, 10),
-    (2, "Seed", "easy", 16, 16, lambda: oval(16, 16, 8, 8, 7, 7), 18, 10),
+    (1, "Spark", "easy", 14, 14, lambda: oval(14, 14, 7, 7, 6, 6), 14, 8),
+    (2, "Seed", "easy", 16, 16, lambda: oval(16, 16, 8, 8, 7, 7), 18, 8),
     (
         3,
         "Tiny Heart",
@@ -861,9 +1021,9 @@ INTROS = [
         18,
         lambda: heart_mask(18, 18, fat=0.9, tip=1.0),
         22,
-        10,
+        8,
     ),
-    (4, "Smile", "easy", 18, 20, lambda: oval(18, 20, 9, 10, 8, 6.5), 22, 10),
+    (4, "Smile", "easy", 18, 20, lambda: oval(18, 20, 9, 10, 8, 6.5), 22, 8),
     (
         5,
         "House",
@@ -872,7 +1032,7 @@ INTROS = [
         18,
         lambda: house_mask(18, 18, roof=1.0),
         22,
-        10,
+        8,
     ),
 ]
 
@@ -955,26 +1115,35 @@ def main():
     assert len(names) == len(set(names)), "duplicate shape names"
 
     levels = {}
-    workers = max(2, min(8, (Path("/").exists() and 8) or 4))
-    print(f"Generating {len(jobs)} levels with {workers} workers…", flush=True)
-
     failed = []
-    with ProcessPoolExecutor(max_workers=workers) as ex:
-        futs = {ex.submit(_worker, job): job[0] for job in jobs}
-        done = 0
-        for fut in as_completed(futs):
-            lid, lv, dt, n = fut.result()
-            done += 1
-            if lv is None:
-                failed.append(lid)
-                print(f"[{done}/1000] L{lid} FAILED ({dt:.1f}s)", flush=True)
-            else:
-                levels[lid] = lv
-                if done % 25 == 0 or lid <= 10 or n < 40 and lid >= 6:
-                    print(
-                        f"[{done}/1000] L{lid} {lv['name']}: {n} arrows ({dt:.1f}s)",
-                        flush=True,
-                    )
+
+    def record(result):
+        lid, lv, dt, n = result
+        if lv is None:
+            failed.append(lid)
+            print(f"[{len(levels) + len(failed)}/1000] L{lid} FAILED ({dt:.1f}s)", flush=True)
+            return
+        levels[lid] = lv
+        done = len(levels) + len(failed)
+        if done % 25 == 0 or lid <= 10 or n < 40 and lid >= 6:
+            print(f"[{done}/1000] L{lid} {lv['name']}: {n} arrows ({dt:.1f}s)", flush=True)
+
+    try:
+        pool = ProcessPoolExecutor(max_workers=8)
+    except (OSError, PermissionError, NotImplementedError):
+        # Sandboxes without SysV semaphores can't fork a pool; fall back.
+        pool = None
+
+    if pool is None:
+        print(f"Generating {len(jobs)} levels serially…", flush=True)
+        for job in jobs:
+            record(_worker(job))
+    else:
+        print(f"Generating {len(jobs)} levels with 8 workers…", flush=True)
+        with pool as ex:
+            futs = {ex.submit(_worker, job): job[0] for job in jobs}
+            for fut in as_completed(futs):
+                record(fut.result())
 
     # Retry failures serially with different seeds; keep ≥40 for lid≥6
     for lid in list(failed):
@@ -1002,6 +1171,7 @@ def main():
     assert len(levels) == 1000
     # Hard check 6+
     for lid, lv in levels.items():
+        assert all(len(a["path"]) >= MIN_PATH for a in lv["arrows"]), lid
         if lid >= 6:
             assert len(lv["arrows"]) >= 38, (lid, len(lv["arrows"]))
             assert all(len(a["path"]) <= 8 for a in lv["arrows"]), lid

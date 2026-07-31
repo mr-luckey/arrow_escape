@@ -49,15 +49,10 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
-            // R8 + resource shrink → smaller AAB; mapping.txt = Play deobfuscation file
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
+            // R8 OFF — avoids Play "keeps stopping" crash from shrinking.
+            isMinifyEnabled = false
+            isShrinkResources = false
             ndk {
-                // Native symbols bundled in AAB for Play Console crash analysis
                 debugSymbolLevel = "SYMBOL_TABLE"
             }
         }

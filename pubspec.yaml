@@ -1,7 +1,7 @@
 name: arrow_escape
 description: ColorPath Out — a bright colorful arrow path puzzle game.
 publish_to: 'none'
-version: 3.0.0+3
+version: 4.0.1+4
 
 environment:
   sdk: ^3.12.2
@@ -39,3 +39,4 @@ flutter:
     - assets/images/backgrounds/
     - assets/images/brand/
     - assets/audio/
+    - assets/audio/piano/
