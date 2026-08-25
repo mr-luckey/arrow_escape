@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'ad_ids.dart';
+import 'ad_waterfall.dart';
 
-/// Fixed-height banner slot. Cycles through [AdIds.banners] forever until
-/// disposed — after a fill it still keeps refreshing from the ID list.
+/// One on-screen banner placement. Loads once; AdMob refreshes the same unit.
+/// Extra IDs are used only when a load fails.
 class BannerAdWidget extends StatefulWidget {
   const BannerAdWidget({super.key, this.height = 50});
 
@@ -17,48 +18,71 @@ class BannerAdWidget extends StatefulWidget {
   State<BannerAdWidget> createState() => _BannerAdWidgetState();
 }
 
-class _BannerAdWidgetState extends State<BannerAdWidget> {
+class _BannerAdWidgetState extends State<BannerAdWidget>
+    with WidgetsBindingObserver {
   BannerAd? _banner;
   bool _loaded = false;
-  int _idIndex = 0;
   bool _disposed = false;
+  bool _loading = false;
   Timer? _retryTimer;
-
-  static const _retryDelay = Duration(milliseconds: 800);
-  static const _refreshDelay = Duration(seconds: 45);
+  int _backoffSec = 30;
+  late final AdWaterfall _ids = AdWaterfall(AdIds.banners);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (kIsWeb) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startLoad());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        !_loaded &&
+        !_loading &&
+        _banner == null) {
+      _startLoad();
+    }
+  }
+
+  void _startLoad() {
+    if (_disposed || kIsWeb || _loading || _loaded) return;
+    if (_ids.isEmpty) return;
+    _ids.beginLoad();
     _loadNext();
   }
 
-  void _schedule(Duration delay, VoidCallback action) {
-    _retryTimer?.cancel();
-    _retryTimer = Timer(delay, () {
-      if (!_disposed && mounted) action();
-    });
-  }
-
   void _loadNext() {
-    if (_disposed || kIsWeb) return;
-    final ids = AdIds.banners;
-    if (ids.isEmpty) return;
+    if (_disposed || kIsWeb || _loaded) return;
 
-    final unitId = ids[_idIndex % ids.length];
-    _idIndex++;
+    final unitId = _ids.next();
+    if (unitId == null) {
+      _loading = false;
+      _retryTimer?.cancel();
+      _retryTimer = Timer(Duration(seconds: _backoffSec), () {
+        if (!_disposed && mounted && !_loaded) {
+          _backoffSec = (_backoffSec * 2).clamp(30, 120);
+          _startLoad();
+        }
+      });
+      return;
+    }
 
+    _loading = true;
     final banner = BannerAd(
       size: AdSize.banner,
       adUnitId: unitId,
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
+          _loading = false;
           if (_disposed || !mounted) {
             ad.dispose();
             return;
           }
+          _ids.markFilled(unitId);
+          _backoffSec = 30;
           final old = _banner;
           setState(() {
             _banner = ad as BannerAd;
@@ -67,28 +91,25 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
           if (old != null && !identical(old, ad)) {
             old.dispose();
           }
-          // Keep fetching forever — refresh from next ID shortly.
-          _schedule(_refreshDelay, _loadNext);
         },
         onAdFailedToLoad: (ad, _) {
           ad.dispose();
+          _loading = false;
           if (_disposed) return;
-          // Keep trying the next ID; never stop for banners.
-          _schedule(_retryDelay, _loadNext);
+          _retryTimer?.cancel();
+          _retryTimer = Timer(const Duration(seconds: 30), () {
+            if (!_disposed && mounted && !_loaded) _loadNext();
+          });
         },
       ),
     );
-
-    // Reserve the slot while the first fill is loading.
-    if (!_loaded) {
-      _banner = banner;
-    }
     banner.load();
   }
 
   @override
   void dispose() {
     _disposed = true;
+    WidgetsBinding.instance.removeObserver(this);
     _retryTimer?.cancel();
     _banner?.dispose();
     super.dispose();

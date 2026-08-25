@@ -5,6 +5,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../audio/audio_service.dart';
 import 'ad_ids.dart';
+import 'ad_waterfall.dart';
 
 class AdsService {
   AdsService(this._audio);
@@ -14,22 +15,31 @@ class AdsService {
   bool _ready = false;
   InterstitialAd? _interstitial;
   RewardedAd? _rewarded;
-  int _winsSinceInterstitial = 0;
+  int _levelEndsSinceInterstitial = 0;
 
-  /// True while a waterfall load is in progress (avoids parallel fetches).
   bool _loadingInterstitial = false;
   bool _loadingRewarded = false;
-
-  /// Guards against showing 2 fullscreen ads at once (double listener / double tap).
   bool _showingInterstitial = false;
   bool _showingRewarded = false;
 
-  static const _retryAllFailedDelay = Duration(seconds: 3);
-  static const _postShowCooldown = Duration(milliseconds: 800);
+  final _interstitialIds = AdWaterfall(AdIds.interstitials);
+  final _rewardedIds = AdWaterfall(AdIds.rewardeds);
+
+  int _interstitialBackoffSec = 30;
+  int _rewardedBackoffSec = 30;
+
+  /// Google: wait at least ~30s after a failed load before requesting again.
+  static const _minRetry = Duration(seconds: 30);
+  static const _maxRetry = Duration(seconds: 120);
+  static const _showEveryNLevelEnds = 2;
 
   Future<void> init() async {
     if (kIsWeb) return;
     try {
+      await _gatherConsent();
+      final canRequest = await ConsentInformation.instance.canRequestAds();
+      if (!canRequest) return;
+
       await MobileAds.instance.initialize();
       _ready = true;
       unawaited(preloadInterstitial());
@@ -39,49 +49,81 @@ class AdsService {
     }
   }
 
+  Future<void> _gatherConsent() async {
+    final updated = Completer<void>();
+    ConsentInformation.instance.requestConsentInfoUpdate(
+      ConsentRequestParameters(),
+      () {
+        if (!updated.isCompleted) updated.complete();
+      },
+      (_) {
+        if (!updated.isCompleted) updated.complete();
+      },
+    );
+    await updated.future;
+    await ConsentForm.loadAndShowConsentFormIfRequired((_) {});
+  }
+
+  Future<bool> privacyOptionsRequired() async {
+    try {
+      final status =
+          await ConsentInformation.instance.getPrivacyOptionsRequirementStatus();
+      return status == PrivacyOptionsRequirementStatus.required;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> showPrivacyOptions() async {
+    await ConsentForm.showPrivacyOptionsForm((_) {});
+  }
+
   bool get isReady => _ready;
 
   void _restoreAudio() {
     unawaited(_audio.onAdClosed());
   }
 
-  /// Waterfall: try each interstitial ID until one loads, then stop.
-  /// After the ad is shown (or all IDs fail), fetching can start again.
+  Duration _backoff(int seconds) {
+    final d = Duration(seconds: seconds);
+    if (d < _minRetry) return _minRetry;
+    if (d > _maxRetry) return _maxRetry;
+    return d;
+  }
+
   Future<void> preloadInterstitial() async {
     if (!_ready ||
         _interstitial != null ||
         _loadingInterstitial ||
-        _showingInterstitial) {
+        _showingInterstitial ||
+        _interstitialIds.isEmpty) {
       return;
     }
-    final ids = AdIds.interstitials;
-    if (ids.isEmpty) return;
     _loadingInterstitial = true;
-    await _loadInterstitialAt(0, ids);
+    _interstitialIds.beginLoad();
+    _loadNextInterstitial();
   }
 
-  Future<void> _loadInterstitialAt(int index, List<String> ids) async {
-    // Stop waterfall if we already have / are showing an ad.
-    if (_interstitial != null || _showingInterstitial) {
+  void _loadNextInterstitial() {
+    final unitId = _interstitialIds.next();
+    if (unitId == null) {
       _loadingInterstitial = false;
-      return;
-    }
-    if (index >= ids.length) {
-      _loadingInterstitial = false;
-      // All IDs failed — short pause, then try the list again.
-      Future<void>.delayed(_retryAllFailedDelay, () {
+      final wait = _backoff(_interstitialBackoffSec);
+      _interstitialBackoffSec = (_interstitialBackoffSec * 2).clamp(30, 120);
+      Future<void>.delayed(wait, () {
         unawaited(preloadInterstitial());
       });
       return;
     }
 
-    await InterstitialAd.load(
-      adUnitId: ids[index],
+    InterstitialAd.load(
+      adUnitId: unitId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
           _loadingInterstitial = false;
-          // If a show started while this was loading, drop this fill.
+          _interstitialBackoffSec = 30;
+          _interstitialIds.markFilled(unitId);
           if (_showingInterstitial) {
             ad.dispose();
             return;
@@ -94,62 +136,64 @@ class AdsService {
               _interstitial = null;
               _showingInterstitial = false;
               _restoreAudio();
-              Future<void>.delayed(_postShowCooldown, () {
-                unawaited(preloadInterstitial());
-              });
+              unawaited(preloadInterstitial());
             },
             onAdFailedToShowFullScreenContent: (ad, _) {
               ad.dispose();
               _interstitial = null;
               _showingInterstitial = false;
               _restoreAudio();
-              Future<void>.delayed(_postShowCooldown, () {
-                unawaited(preloadInterstitial());
-              });
+              unawaited(preloadInterstitial());
             },
           );
         },
         onAdFailedToLoad: (_) {
-          // Next ID in the array — keep going until one fills.
-          unawaited(_loadInterstitialAt(index + 1, ids));
+          // Never retry immediately — Google flags rapid failed requests as IVT.
+          Future<void>.delayed(_minRetry, () {
+            if (!_ready || _interstitial != null || _showingInterstitial) {
+              _loadingInterstitial = false;
+              return;
+            }
+            _loadNextInterstitial();
+          });
         },
       ),
     );
   }
 
-  /// Waterfall: try each rewarded ID until one loads, then stop.
   Future<void> preloadRewarded() async {
     if (!_ready ||
         _rewarded != null ||
         _loadingRewarded ||
-        _showingRewarded) {
+        _showingRewarded ||
+        _rewardedIds.isEmpty) {
       return;
     }
-    final ids = AdIds.rewardeds;
-    if (ids.isEmpty) return;
     _loadingRewarded = true;
-    await _loadRewardedAt(0, ids);
+    _rewardedIds.beginLoad();
+    _loadNextRewarded();
   }
 
-  Future<void> _loadRewardedAt(int index, List<String> ids) async {
-    if (_rewarded != null || _showingRewarded) {
+  void _loadNextRewarded() {
+    final unitId = _rewardedIds.next();
+    if (unitId == null) {
       _loadingRewarded = false;
-      return;
-    }
-    if (index >= ids.length) {
-      _loadingRewarded = false;
-      Future<void>.delayed(_retryAllFailedDelay, () {
+      final wait = _backoff(_rewardedBackoffSec);
+      _rewardedBackoffSec = (_rewardedBackoffSec * 2).clamp(30, 120);
+      Future<void>.delayed(wait, () {
         unawaited(preloadRewarded());
       });
       return;
     }
 
-    await RewardedAd.load(
-      adUnitId: ids[index],
+    RewardedAd.load(
+      adUnitId: unitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
           _loadingRewarded = false;
+          _rewardedBackoffSec = 30;
+          _rewardedIds.markFilled(unitId);
           if (_showingRewarded) {
             ad.dispose();
             return;
@@ -162,33 +206,34 @@ class AdsService {
               _rewarded = null;
               _showingRewarded = false;
               _restoreAudio();
-              Future<void>.delayed(_postShowCooldown, () {
-                unawaited(preloadRewarded());
-              });
+              unawaited(preloadRewarded());
             },
             onAdFailedToShowFullScreenContent: (ad, _) {
               ad.dispose();
               _rewarded = null;
               _showingRewarded = false;
               _restoreAudio();
-              Future<void>.delayed(_postShowCooldown, () {
-                unawaited(preloadRewarded());
-              });
+              unawaited(preloadRewarded());
             },
           );
         },
         onAdFailedToLoad: (_) {
-          unawaited(_loadRewardedAt(index + 1, ids));
+          Future<void>.delayed(_minRetry, () {
+            if (!_ready || _rewarded != null || _showingRewarded) {
+              _loadingRewarded = false;
+              return;
+            }
+            _loadNextRewarded();
+          });
         },
       ),
     );
   }
 
-  /// Show interstitial every 2 cleared / failed levels (example cadence).
-  /// At most one interstitial on screen — never two.
+  /// Interstitial at a natural break (level win/lose), every N completions.
   Future<void> maybeShowInterstitialOnLevelEnd() async {
-    _winsSinceInterstitial++;
-    if (_winsSinceInterstitial < 2) return;
+    _levelEndsSinceInterstitial++;
+    if (_levelEndsSinceInterstitial < _showEveryNLevelEnds) return;
     if (_showingInterstitial || _showingRewarded) return;
 
     final ad = _interstitial;
@@ -197,15 +242,14 @@ class AdsService {
       return;
     }
 
-    _winsSinceInterstitial = 0;
+    _levelEndsSinceInterstitial = 0;
     _showingInterstitial = true;
     _interstitial = null;
     await _audio.pauseBgm();
     await ad.show();
   }
 
-  /// Returns true if the user earned the reward (or ads unavailable → grant).
-  /// At most one rewarded on screen — never two.
+  /// User-initiated rewarded. Grant if the ad cannot be shown (no fill).
   Future<bool> showRewardedForHint() async {
     if (_showingRewarded || _showingInterstitial) return true;
 
@@ -225,18 +269,14 @@ class AdsService {
         _showingRewarded = false;
         _restoreAudio();
         if (!completer.isCompleted) completer.complete(earned);
-        Future<void>.delayed(_postShowCooldown, () {
-          unawaited(preloadRewarded());
-        });
+        unawaited(preloadRewarded());
       },
       onAdFailedToShowFullScreenContent: (ad, _) {
         ad.dispose();
         _showingRewarded = false;
         _restoreAudio();
         if (!completer.isCompleted) completer.complete(true);
-        Future<void>.delayed(_postShowCooldown, () {
-          unawaited(preloadRewarded());
-        });
+        unawaited(preloadRewarded());
       },
     );
     await _audio.pauseBgm();

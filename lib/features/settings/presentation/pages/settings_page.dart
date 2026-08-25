@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/ads/ads_service.dart';
 import '../../../../core/ads/banner_ad_widget.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/responsive/breakpoints.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme_extension.dart';
@@ -91,6 +93,21 @@ class SettingsPage extends StatelessWidget {
                                 );
                               },
                             ),
+                            FutureBuilder<bool>(
+                              future: sl<AdsService>().privacyOptionsRequired(),
+                              builder: (context, snap) {
+                                if (snap.data != true) {
+                                  return const SizedBox.shrink();
+                                }
+                                return _Tile(
+                                  title: 'Privacy options',
+                                  subtitle: 'Manage how ads are personalized',
+                                  onTap: () =>
+                                      sl<AdsService>().showPrivacyOptions(),
+                                  trailing: const Icon(Icons.chevron_right),
+                                );
+                              },
+                            ),
                             const SizedBox(height: 20),
                             Text(
                               'Color Scheme',
@@ -161,11 +178,13 @@ class _Tile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.trailing,
+    this.onTap,
   });
 
   final String title;
   final String subtitle;
   final Widget trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -180,6 +199,7 @@ class _Tile extends StatelessWidget {
         title: Text(title),
         subtitle: Text(subtitle),
         trailing: trailing,
+        onTap: onTap,
       ),
     );
   }

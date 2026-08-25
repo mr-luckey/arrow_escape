@@ -409,7 +409,10 @@ class _GameViewState extends State<_GameView> {
                     ),
                   ),
                   // Banner stays plain — no card/elevation around ads.
-                  if (!demo) const BannerAdWidget(height: 50),
+                  if (!demo) ...[
+                    const SizedBox(height: 12),
+                    const BannerAdWidget(height: 50),
+                  ],
                   SizedBox(height: MediaQuery.paddingOf(context).bottom),
                 ],
               );
