@@ -9,8 +9,14 @@ import '../../features/game/domain/usecases/game_usecases.dart';
 import '../../features/levels/presentation/bloc/progress_cubit.dart';
 import '../../features/settings/presentation/bloc/settings_cubit.dart';
 import '../ads/ads_service.dart';
+import '../analytics/analytics_service.dart';
 import '../audio/audio_service.dart';
+import '../config/ads_config.dart';
+import '../config/analytics_config.dart';
+import '../config/notification_config.dart';
 import '../haptics/haptics_service.dart';
+import '../network/network_guard.dart';
+import '../notifications/local_notification_service.dart';
 import '../store/app_store_service.dart';
 import '../theme/theme_cubit.dart';
 
@@ -22,7 +28,29 @@ Future<void> configureDependencies() async {
 
   sl.registerLazySingleton(() => AudioService());
   sl.registerLazySingleton(() => HapticsService());
-  sl.registerLazySingleton(() => AdsService(sl()));
+  sl.registerLazySingleton(() => NetworkGuard());
+  sl.registerLazySingleton(
+    () => AdsService(
+      audio: sl(),
+      config: appAdsConfig,
+      network: sl(),
+    ),
+  );
+  sl.registerLazySingleton(
+    () => AnalyticsService(config: appAnalyticsConfig),
+  );
+  sl.registerLazySingleton(
+    () => LocalNotificationService(
+      config: appNotificationConfig,
+      prefs: prefs,
+      onTap: (payload) {
+        sl<AnalyticsService>().logNotificationOpened(
+          notificationId: payload,
+          source: 'local',
+        );
+      },
+    ),
+  );
   sl.registerLazySingleton(() => AppStoreService(sl()));
   sl.registerLazySingleton(() => LevelAssetDataSource());
   sl.registerLazySingleton(() => ProgressLocalDataSource(sl()));

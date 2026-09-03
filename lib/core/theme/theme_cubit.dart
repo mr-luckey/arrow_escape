@@ -14,7 +14,7 @@ class ThemeCubit extends Cubit<AppColorSchemeId> {
     final raw = prefs.getString(_key);
     return AppColorSchemeId.values.firstWhere(
       (e) => e.name == raw,
-      orElse: () => AppColorSchemeId.sky,
+      orElse: () => AppColorSchemeId.sunset,
     );
   }
 

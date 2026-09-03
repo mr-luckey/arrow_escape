@@ -45,8 +45,8 @@ extension AppThemeX on BuildContext {
   AppThemeExtension get appTheme =>
       Theme.of(this).extension<AppThemeExtension>() ??
       const AppThemeExtension(
-        colors: AppColors.sky,
-        schemeId: AppColorSchemeId.sky,
+        colors: AppColors.sunset,
+        schemeId: AppColorSchemeId.sunset,
       );
 
   AppColors get colors => appTheme.colors;

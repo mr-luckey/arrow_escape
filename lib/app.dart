@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/analytics/analytics_service.dart';
 import 'core/audio/audio_service.dart';
 import 'core/di/injection.dart';
+import 'core/notifications/local_notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
@@ -62,8 +64,34 @@ class _AudioLifecycleState extends State<_AudioLifecycle>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      sl<AudioService>().startBgm();
+      unawaited(_warmAudio());
+      // Defer notifications so splash/home paint first (permission dialog).
+      Future<void>.delayed(const Duration(seconds: 2), () {
+        unawaited(_scheduleLocalNotifications());
+      });
     });
+  }
+
+  Future<void> _warmAudio() async {
+    try {
+      await sl<AudioService>().startBgm();
+    } catch (_) {}
+  }
+
+  Future<void> _scheduleLocalNotifications() async {
+    try {
+      final count = await sl<LocalNotificationService>()
+          .scheduleNotifications()
+          .timeout(const Duration(seconds: 12));
+      unawaited(
+        sl<AnalyticsService>().logNotificationScheduled(
+          count: count,
+          source: 'app_start',
+        ),
+      );
+    } catch (error, stack) {
+      debugPrint('Notification schedule failed: $error\n$stack');
+    }
   }
 
   @override

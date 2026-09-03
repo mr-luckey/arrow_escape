@@ -15,6 +15,7 @@ class GameHud extends StatelessWidget {
     required this.onHint,
     required this.onSettings,
     required this.onBack,
+    this.hintBusy = false,
   });
 
   final String levelLabel;
@@ -24,6 +25,7 @@ class GameHud extends StatelessWidget {
   final VoidCallback onHint;
   final VoidCallback onSettings;
   final VoidCallback onBack;
+  final bool hintBusy;
 
   @override
   Widget build(BuildContext context) {
@@ -52,9 +54,11 @@ class GameHud extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             SoftIconButton(
-              icon: Icons.lightbulb_rounded,
-              onPressed: onHint,
-              tooltip: 'Hint',
+              icon: hintBusy
+                  ? Icons.hourglass_top_rounded
+                  : Icons.lightbulb_rounded,
+              onPressed: hintBusy ? null : onHint,
+              tooltip: hintBusy ? 'Loading ad…' : 'Hint',
               background: colors.secondary.withValues(alpha: 0.25),
             ),
           ],

@@ -1,0 +1,64 @@
+{
+  "notifications": [
+    {
+      "id": "path_001",
+      "title": "One wrong arrow and you're stuck",
+      "body": "Jump back into ColorPath Out and clear the board before it tangles up."
+    },
+    {
+      "id": "path_002",
+      "title": "Your path is still open",
+      "body": "A bright new arrow maze is waiting — can you escape in fewer moves?"
+    },
+    {
+      "id": "path_003",
+      "title": "Hint ready when you need it",
+      "body": "Watch a short video for a nudge, then slide the right arrows free."
+    },
+    {
+      "id": "path_004",
+      "title": "Colorful chaos ahead",
+      "body": "Pick a level, plan the route, and watch every arrow fly off the board."
+    },
+    {
+      "id": "path_005",
+      "title": "Don't leave that puzzle half-done",
+      "body": "Come back to ArrowPath Out — one clean sequence and you're clear."
+    },
+    {
+      "id": "path_006",
+      "title": "Think two moves ahead",
+      "body": "The next ColorPath level rewards patience. Tap in and find the exit route."
+    },
+    {
+      "id": "path_007",
+      "title": "Hearts left? Keep going",
+      "body": "Retry the tangle, learn the pattern, and escape with a perfect clear."
+    },
+    {
+      "id": "path_008",
+      "title": "A quick arrow warm-up",
+      "body": "Sixty seconds is enough for one satisfying ColorPath escape."
+    },
+    {
+      "id": "path_009",
+      "title": "New angles, same thrill",
+      "body": "Slide, clear, escape — your next ArrowPath puzzle is one tap away."
+    },
+    {
+      "id": "path_010",
+      "title": "Can you clear it without a hint?",
+      "body": "Challenge yourself on ColorPath Out and carve a perfect path out."
+    },
+    {
+      "id": "path_011",
+      "title": "The board remembers nothing",
+      "body": "Fresh start, fresh strategy. Open ArrowPath Out and untangle tonight's maze."
+    },
+    {
+      "id": "path_012",
+      "title": "Escape is one sequence away",
+      "body": "Line up the colors, free the arrows, and feel that clean board win."
+    }
+  ]
+}

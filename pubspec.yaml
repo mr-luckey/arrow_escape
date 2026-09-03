@@ -25,6 +25,12 @@ dependencies:
   in_app_review: ^2.0.12
   url_launcher: ^6.3.2
   package_info_plus: ^10.2.1
+  flutter_local_notifications: ^22.3.0
+  timezone: ^0.11.1
+  flutter_timezone: ^5.1.0
+  connectivity_plus: ^7.3.1
+  firebase_core: ^4.14.0
+  firebase_analytics: ^12.5.0
 
 dev_dependencies:
   flutter_test:
@@ -40,3 +46,4 @@ flutter:
     - assets/images/brand/
     - assets/audio/
     - assets/audio/piano/
+    - assets/notifications/notifications.json

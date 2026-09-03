@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "627421784829",
+    "project_id": "arrow-pathout",
+    "storage_bucket": "arrow-pathout.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:627421784829:android:dc1a10da29ea9da4ec6c94",
+        "android_client_info": {
+          "package_name": "com.appwaretech.colorpathout"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClBEpl64qx9tgG2Bq019TSDoKfI_UHP_M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

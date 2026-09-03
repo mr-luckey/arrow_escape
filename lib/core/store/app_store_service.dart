@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -43,28 +44,37 @@ class AppStoreService {
   }
 
   /// Checks Play Store for an available update (Android only).
-  /// Runs at most once per app session. Uses flexible update when possible.
+  /// Runs at most once per app session. Never blocks launch indefinitely.
   Future<void> checkForUpdate() async {
     if (_updateCheckedThisSession) return;
     _updateCheckedThisSession = true;
     if (kIsWeb || !Platform.isAndroid) return;
 
     try {
-      final info = await InAppUpdate.checkForUpdate();
+      final info = await InAppUpdate.checkForUpdate()
+          .timeout(const Duration(seconds: 5));
       if (info.updateAvailability != UpdateAvailability.updateAvailable) {
         return;
       }
 
-      if (info.immediateUpdateAllowed) {
-        await InAppUpdate.performImmediateUpdate();
+      // Prefer flexible — immediate update freezes the UI until Play finishes.
+      if (info.flexibleUpdateAllowed) {
+        final result = await InAppUpdate.startFlexibleUpdate()
+            .timeout(const Duration(seconds: 60));
+        if (result == AppUpdateResult.success) {
+          await InAppUpdate.completeFlexibleUpdate()
+              .timeout(const Duration(seconds: 10));
+        }
         return;
       }
 
-      if (info.flexibleUpdateAllowed) {
-        final result = await InAppUpdate.startFlexibleUpdate();
-        if (result == AppUpdateResult.success) {
-          await InAppUpdate.completeFlexibleUpdate();
-        }
+      if (info.immediateUpdateAllowed) {
+        unawaited(
+          InAppUpdate.performImmediateUpdate().catchError((Object e) {
+            debugPrint('Immediate update failed: $e');
+            return AppUpdateResult.inAppUpdateFailed;
+          }),
+        );
       }
     } catch (e, st) {
       debugPrint('AppStoreService.checkForUpdate failed: $e\n$st');

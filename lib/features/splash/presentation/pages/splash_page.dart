@@ -5,8 +5,28 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme_extension.dart';
 import '../../../../core/widgets/app_widgets.dart';
 
-class SplashPage extends StatelessWidget {
+class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
+
+  @override
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage> {
+  bool _navigated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Hard navigation fallback — never stay stuck on splash.
+    Future<void>.delayed(const Duration(milliseconds: 1400), _goHome);
+  }
+
+  void _goHome() {
+    if (_navigated || !mounted) return;
+    _navigated = true;
+    context.go('/');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +53,7 @@ class SplashPage extends StatelessWidget {
                 child: TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: 1),
                   duration: const Duration(milliseconds: 1100),
-                  onEnd: () => context.go('/'),
+                  onEnd: _goHome,
                   builder: (context, value, _) {
                     return ClipRRect(
                       borderRadius: BorderRadius.circular(8),

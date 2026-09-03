@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/ads/ads_service.dart';
-import '../../../../core/ads/banner_ad_widget.dart';
+import '../../../../core/ads/banner_ad_slot.dart';
+import '../../../../core/analytics/analytics_service.dart';
 import '../../../../core/audio/audio_service.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/haptics/haptics_service.dart';
@@ -27,6 +30,12 @@ class GamePage extends StatelessWidget {
     return BlocProvider(
       create: (_) {
         sl<AudioService>().prepareLevelTune(levelId);
+        unawaited(
+          sl<AnalyticsService>().logLevelStarted(
+            levelNumber: levelId,
+            source: 'game',
+          ),
+        );
         return GameBloc(
           levelRepository: sl(),
           progressRepository: sl(),
@@ -39,13 +48,70 @@ class GamePage extends StatelessWidget {
   }
 }
 
-class _GameView extends StatelessWidget {
+class _GameView extends StatefulWidget {
   const _GameView();
 
-  Future<void> _onHint(BuildContext context) async {
+  @override
+  State<_GameView> createState() => _GameViewState();
+}
+
+class _GameViewState extends State<_GameView> {
+  bool _hintBusy = false;
+
+  Future<void> _onHint() async {
+    // Hard UI + service lock — spam taps never queue a second rewarded ad.
+    if (_hintBusy || !mounted) return;
     final ads = sl<AdsService>();
-    final earned = await ads.showRewardedForHint();
-    if (!context.mounted || !earned) return;
+    if (ads.isFullScreenBusy) return;
+
+    setState(() => _hintBusy = true);
+    try {
+      // Fully offline: skip AdMob and grant the hint so gameplay continues.
+      if (!ads.isOnline) {
+        _grantHint(source: 'offline');
+        return;
+      }
+
+      final earned = await ads.showRewardedForHint();
+      if (!mounted) return;
+      if (earned) {
+        _grantHint(source: 'rewarded');
+        return;
+      }
+
+      // Online but no fill / skipped — do not grant; keep play flowing.
+      if (!ads.isOnline) {
+        _grantHint(source: 'offline');
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Hint ad unavailable. Try again in a moment.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _hintBusy = false);
+    }
+  }
+
+  void _grantHint({required String source}) {
+    if (!mounted) return;
+    final level = context.read<GameBloc>().state.level;
+    if (source == 'rewarded') {
+      unawaited(
+        sl<AnalyticsService>().logRewardedAdCompleted(
+          placement: 'hint',
+          source: 'game',
+        ),
+      );
+    }
+    unawaited(
+      sl<AnalyticsService>().logHintUsed(
+        levelNumber: level?.id,
+        source: source,
+      ),
+    );
     context.read<GameBloc>().add(const HintRequested());
   }
 
@@ -102,12 +168,26 @@ class _GameView extends StatelessWidget {
                 audio.playWin();
                 haptics.heavy();
                 context.read<ProgressCubit>().refresh();
-                sl<AdsService>().maybeShowInterstitialOnLevelEnd();
+                unawaited(
+                  sl<AnalyticsService>().logLevelCompleted(
+                    levelNumber: state.level?.id,
+                    moves: state.moveCount,
+                    source: 'game',
+                  ),
+                );
+                unawaited(sl<AdsService>().maybeShowInterstitialOnLevelEnd());
               } else if (state.status == GameStatus.lost) {
                 audio.playLose();
                 haptics.heavy();
                 context.read<ProgressCubit>().refresh();
-                sl<AdsService>().maybeShowInterstitialOnLevelEnd();
+                unawaited(
+                  sl<AnalyticsService>().logLevelFailed(
+                    levelNumber: state.level?.id,
+                    moves: state.moveCount,
+                    source: 'game',
+                  ),
+                );
+                unawaited(sl<AdsService>().maybeShowInterstitialOnLevelEnd());
               }
             },
             builder: (context, state) {
@@ -127,133 +207,158 @@ class _GameView extends StatelessWidget {
               final hasNext =
                   totalLevels == 0 ? level.id < 1000 : level.id < totalLevels;
 
-              return Column(
+              return Stack(
                 children: [
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-                              child: GameHud(
-                                levelLabel: 'LEVEL ${level.id}',
-                                hearts: state.hearts,
-                                maxHearts: state.maxHearts,
-                                onBack: () => context.go('/levels'),
-                                onReset: () => context
-                                    .read<GameBloc>()
-                                    .add(const ResetRequested()),
-                                onHint: () => _onHint(context),
-                                onSettings: () => context.go('/settings'),
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                        child: GameHud(
+                          levelLabel: 'LEVEL ${level.id}',
+                          hearts: state.hearts,
+                          maxHearts: state.maxHearts,
+                          hintBusy: _hintBusy,
+                          onBack: () {
+                            unawaited(
+                              sl<AdsService>().runAfterInterstitialBreak(
+                                placement: 'leave_game',
+                                onContinue: () {
+                                  if (context.mounted) {
+                                    context.go('/levels');
+                                  }
+                                },
                               ),
-                            ),
-                            // Space after hearts before playfield.
-                            const SizedBox(height: 20),
-                            Expanded(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 10),
-                                child: AppCard(
-                                  elevation: 10,
-                                  borderRadius: 22,
-                                  padding: const EdgeInsets.all(12),
-                                  child: ExitAnimationGate(
-                                    status: state.status,
-                                    animationKey:
-                                        state.lastRemovedArrowId == null
-                                            ? null
-                                            : '${state.lastRemovedArrowId}-${state.moveCount}',
-                                    onCompleted: () => context
-                                        .read<GameBloc>()
-                                        .add(const AnimationCompleted()),
-                                    child: (progress) {
-                                      return HintPulse(
-                                        active: state.hintArrowId != null &&
-                                            state.status == GameStatus.playing,
-                                        builder: (context, pulse) {
-                                          final board = GameBoard(
-                                            rows: level.rows,
-                                            cols: level.cols,
-                                            arrows: state.arrows,
-                                            arrowColors: colors.arrowPalette,
-                                            hintArrowId: state.hintArrowId,
-                                            failedArrowId:
-                                                state.lastFailedArrowId,
-                                            removedArrowId:
-                                                state.lastRemovedArrowId,
-                                            exitProgress: progress,
-                                            hintPulse: pulse,
-                                            enabled: state.status ==
-                                                GameStatus.playing,
-                                            onArrowTapped: (id) {
-                                              sl<HapticsService>().setEnabled(
-                                                context
-                                                    .read<SettingsCubit>()
-                                                    .state
-                                                    .hapticsEnabled,
-                                              );
-                                              sl<HapticsService>().selection();
-                                              context
-                                                  .read<GameBloc>()
-                                                  .add(ArrowTapped(id));
-                                            },
-                                          );
-
-                                          return board;
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
+                            );
+                          },
+                          onReset: () => context
+                              .read<GameBloc>()
+                              .add(const ResetRequested()),
+                          onHint: _onHint,
+                          onSettings: () {
+                            unawaited(
+                              sl<AdsService>().runAfterInterstitialBreak(
+                                placement: 'open_settings',
+                                onContinue: () {
+                                  if (context.mounted) {
+                                    context.go('/settings');
+                                  }
+                                },
                               ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(top: 4, bottom: 4),
-                              child: Text(
-                                level.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                        if (state.status == GameStatus.won)
-                          WinOverlay(
-                            stars: state.earnedStars,
-                            hasNext: hasNext,
-                            onNext: () {
-                              context.go('/game/${level.id + 1}');
-                            },
-                            onReplay: () {
-                              context
+                      ),
+                      // Space after hearts before playfield.
+                      const SizedBox(height: 20),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: AppCard(
+                            elevation: 10,
+                            borderRadius: 22,
+                            padding: const EdgeInsets.all(12),
+                            child: ExitAnimationGate(
+                              status: state.status,
+                              animationKey: state.lastRemovedArrowId == null
+                                  ? null
+                                  : '${state.lastRemovedArrowId}-${state.moveCount}',
+                              onCompleted: () => context
                                   .read<GameBloc>()
-                                  .add(GameStarted(level.id));
-                            },
-                            onHome: () => context.go('/'),
+                                  .add(const AnimationCompleted()),
+                              child: (progress) {
+                                return HintPulse(
+                                  active: state.hintArrowId != null &&
+                                      state.status == GameStatus.playing,
+                                  builder: (context, pulse) {
+                                    final board = GameBoard(
+                                      rows: level.rows,
+                                      cols: level.cols,
+                                      arrows: state.arrows,
+                                      arrowColors: colors.arrowPalette,
+                                      hintArrowId: state.hintArrowId,
+                                      failedArrowId: state.lastFailedArrowId,
+                                      removedArrowId: state.lastRemovedArrowId,
+                                      exitProgress: progress,
+                                      hintPulse: pulse,
+                                      enabled:
+                                          state.status == GameStatus.playing,
+                                      onArrowTapped: (id) {
+                                        sl<HapticsService>().setEnabled(
+                                          context
+                                              .read<SettingsCubit>()
+                                              .state
+                                              .hapticsEnabled,
+                                        );
+                                        sl<HapticsService>().selection();
+                                        context
+                                            .read<GameBloc>()
+                                            .add(ArrowTapped(id));
+                                      },
+                                    );
+
+                                    return board;
+                                  },
+                                );
+                              },
+                            ),
                           ),
-                        if (state.status == GameStatus.lost)
-                          LoseOverlay(
-                            onRetry: () {
-                              context
-                                  .read<GameBloc>()
-                                  .add(GameStarted(level.id));
-                            },
-                            onHome: () => context.go('/'),
-                          ),
-                      ],
-                    ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4, bottom: 4),
+                        child: Text(
+                          level.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                      ),
+                    ],
                   ),
-                  // Banner stays plain — no card/elevation around ads.
-                  const BannerAdWidget(height: 50),
-                  SizedBox(height: MediaQuery.paddingOf(context).bottom),
+                  if (state.status == GameStatus.won)
+                    WinOverlay(
+                      stars: state.earnedStars,
+                      hasNext: hasNext,
+                      onNext: () {
+                        // Level-end interstitial already handled in listener.
+                        context.go('/game/${level.id + 1}');
+                      },
+                      onReplay: () {
+                        context.read<GameBloc>().add(GameStarted(level.id));
+                      },
+                      onHome: () {
+                        unawaited(
+                          sl<AdsService>().runAfterInterstitialBreak(
+                            placement: 'leave_game',
+                            onContinue: () {
+                              if (context.mounted) context.go('/');
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  if (state.status == GameStatus.lost)
+                    LoseOverlay(
+                      onRetry: () {
+                        context.read<GameBloc>().add(GameStarted(level.id));
+                      },
+                      onHome: () {
+                        unawaited(
+                          sl<AdsService>().runAfterInterstitialBreak(
+                            placement: 'leave_game',
+                            onContinue: () {
+                              if (context.mounted) context.go('/');
+                            },
+                          ),
+                        );
+                      },
+                    ),
                 ],
               );
             },
           ),
         ),
+        bottomNavigationBar: const BannerAdSlot(placement: 'game'),
       ),
     );
   }
