@@ -50,10 +50,16 @@ class LocalNotificationService {
       await _setLocalTimezone().timeout(const Duration(seconds: 2));
 
       const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+      // Explicit Darwin defaults so iOS 14+ shows banners while app is open.
       const ios = DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
         requestSoundPermission: false,
+        defaultPresentAlert: true,
+        defaultPresentBadge: true,
+        defaultPresentSound: true,
+        defaultPresentBanner: true,
+        defaultPresentList: true,
       );
       await _plugin
           .initialize(
@@ -88,7 +94,7 @@ class LocalNotificationService {
       AndroidNotificationChannel(
         _config.androidChannelId,
         _config.androidChannelName,
-        description: 'Local ArrowPath Out reminders (works offline)',
+        description: 'Local ColorArrow Out reminders (works offline)',
         importance: Importance.high,
         playSound: true,
         enableVibration: true,
@@ -99,18 +105,23 @@ class LocalNotificationService {
 
   Future<bool> requestPermission() async {
     try {
-      final android = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-      final ios = _plugin.resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>();
-      final androidOk = await android?.requestNotificationsPermission() ?? true;
-      final iosOk = await ios?.requestPermissions(
-            alert: true,
-            badge: true,
-            sound: true,
-          ) ??
-          true;
-      return androidOk && iosOk;
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        final android = _plugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+        return await android?.requestNotificationsPermission() ?? true;
+      }
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        final ios = _plugin.resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
+        final granted = await ios?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        debugPrint('iOS notification permission granted=$granted');
+        return granted ?? false;
+      }
+      return true;
     } catch (error, stack) {
       debugPrint('Notification permission failed: $error\n$stack');
       return false;
@@ -137,10 +148,22 @@ class LocalNotificationService {
       // Test burst ONLY in test mode. Production never shows these.
       if (_config.testMode) {
         await _plugin.cancelAll();
+        // Immediate show so QA can verify permission + iOS foreground banner
+        // without waiting for the first zoned fire.
+        final first = messages.first;
+        await _plugin.show(
+          id: _testIdBase - 1,
+          title: first.title,
+          body: first.body,
+          notificationDetails: _details(),
+          payload: first.id,
+        );
         final count = await _scheduleTestBurst(messages);
+        final pending = await _plugin.pendingNotificationRequests();
         debugPrint(
-          'TEST MODE: scheduled $count offline notifications '
-          '(every ${_config.testInterval.inSeconds}s, inexact — no alarm permission).',
+          'TEST MODE: showed 1 now + scheduled $count offline '
+          '(every ${_config.testInterval.inSeconds}s). '
+          'pending=${pending.length}',
         );
         return count;
       }
@@ -192,7 +215,7 @@ class LocalNotificationService {
       android: AndroidNotificationDetails(
         _config.androidChannelId,
         _config.androidChannelName,
-        channelDescription: 'Local ArrowPath Out reminders (works offline)',
+        channelDescription: 'Local ColorArrow Out reminders (works offline)',
         importance: high ? Importance.high : Importance.defaultImportance,
         priority: high ? Priority.high : Priority.defaultPriority,
         playSound: true,
@@ -200,10 +223,14 @@ class LocalNotificationService {
         category: AndroidNotificationCategory.reminder,
         visibility: NotificationVisibility.public,
       ),
+      // iOS 14+: presentBanner/presentList required for foreground banners.
       iOS: const DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        presentBanner: true,
+        presentList: true,
+        interruptionLevel: InterruptionLevel.active,
       ),
     );
   }

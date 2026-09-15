@@ -13,10 +13,10 @@ enum RewardedAdOutcome { earned, skipped, unavailable }
 class AdsService {
   AdsService({
     required AudioService audio,
-    AdsConfig config = appAdsConfig,
+    AdsConfig? config,
     NetworkGuard? network,
   })  : _audio = audio,
-        _config = config,
+        _config = config ?? appAdsConfig,
         _network = network ?? NetworkGuard();
 
   final AudioService _audio;
@@ -435,7 +435,13 @@ class AdsService {
       // Do not wrap initialize itself in a short timeout — that abandons a
       // live SDK call and permanently blocks ads after a cold-start hang.
       await MobileAds.instance.initialize();
-      if (_config.testMode) {
+      // Debug only: register this device so production unit IDs still fill
+      // with Google test creatives (official AdMob approach — not sample units).
+      if (kDebugMode && kDebugAdMobTestDevices.isNotEmpty) {
+        await MobileAds.instance.updateRequestConfiguration(
+          RequestConfiguration(testDeviceIds: kDebugAdMobTestDevices),
+        );
+      } else if (_config.testMode) {
         await MobileAds.instance.updateRequestConfiguration(
           RequestConfiguration(
             testDeviceIds: const ['EMULATOR'],
@@ -445,11 +451,20 @@ class AdsService {
       _sdkInitialized = true;
       if (!completer.isCompleted) completer.complete(true);
       if (kDebugMode) {
+        final mode = _config.testMode ? 'TEST_UNITS' : 'PRODUCTION_UNITS';
         debugPrint(
-          'Ads SDK ready (testMode=${_config.testMode}, '
-          'forceTestAds=$kForceTestAds, '
-          'appUnits=production, '
-          'banner=${_config.bannerUnitId('home')})',
+          'Ads SDK ready [$mode] '
+          '(forceTestAds=$kForceTestAds, platform=${defaultTargetPlatform.name}, '
+          'testDevices=${kDebugMode ? kDebugAdMobTestDevices : const <String>[]})',
+        );
+        debugPrint(
+          'Ads home banner unit: ${_config.bannerUnitId('home')}',
+        );
+        debugPrint(
+          'Ads interstitial unit: ${_config.interstitialUnitId('after_level_group')}',
+        );
+        debugPrint(
+          'Ads rewarded unit: ${_config.rewardedUnitId('hint')}',
         );
       }
     } catch (error, stack) {

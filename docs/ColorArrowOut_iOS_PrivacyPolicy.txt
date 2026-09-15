@@ -1,0 +1,291 @@
+================================================================================
+PRIVACY POLICY — ColorArrow Out (iOS)
+Last updated: September 15, 2026
+================================================================================
+
+This Privacy Policy explains how AppWare Tech ("we", "us", or "our") collects,
+uses, and shares information when you use the iOS mobile application
+ColorArrow Out (the "App") distributed through the Apple App Store.
+
+By downloading or using ColorArrow Out on iOS, you agree to this Privacy
+Policy. If you do not agree, please do not use the App.
+
+
+--------------------------------------------------------------------------------
+1. WHO WE ARE
+--------------------------------------------------------------------------------
+
+App name:          ColorArrow Out
+Platform:          iOS (Apple App Store)
+Publisher:         AppWare Tech
+Bundle ID:         com.appwaretech.ArrowPathOut
+Apple App ID:      6812360593
+Contact email:     contact@appwaretech.com
+
+
+--------------------------------------------------------------------------------
+2. SCOPE — WHAT THIS POLICY COVERS (iOS BUILD)
+--------------------------------------------------------------------------------
+
+This document describes data practices for the iOS version of ColorArrow Out
+based on the App’s current implementation:
+
+  • Local device storage for gameplay and settings
+  • Optional local (on-device) notifications
+  • Third-party advertising via Google AdMob
+  • Optional links to the Apple App Store for rating the App
+
+IMPORTANT — Firebase is NOT used on iOS:
+  The iOS App does not include Firebase configuration
+  (no GoogleService-Info.plist). In-app analytics collection is disabled.
+  We do not send gameplay analytics events to Firebase from the iOS App.
+
+
+--------------------------------------------------------------------------------
+3. INFORMATION WE COLLECT
+--------------------------------------------------------------------------------
+
+ColorArrow Out is primarily an offline puzzle game. We do not require you to
+create an account, and we do not ask for your name, email address, phone
+number, payment card details, or other personal registration information to
+play.
+
+3.1 Information stored on your device (locally)
+    The App may store the following on your device using on-device storage
+    (for example Apple UserDefaults / SharedPreferences):
+
+    • Game progress (unlocked levels, stars / completion status)
+    • Settings preferences (sound, music, haptics / vibration, color theme)
+    • App review prompt flags (for example launch count and “don’t ask again”)
+    • Local notification schedule fingerprint (to avoid rescheduling the same
+      offline reminder set unnecessarily)
+
+    This data stays on your device. We do not operate our own server that
+    receives or stores this gameplay data from the iOS App.
+
+3.2 Local notifications (on-device only)
+    If you grant notification permission, the App may schedule local reminders
+    on your device (for example daily play reminders). These notifications:
+
+    • Are generated and delivered on your device
+    • Do not use Apple Push Notification service (APNs) remote push from our
+      servers
+    • Do not use Firebase Cloud Messaging (FCM)
+    • Work without an internet connection once scheduled
+
+    You can deny or revoke notification permission in iOS Settings at any time.
+
+3.3 Information collected by advertising partners (Google AdMob)
+    The App displays ads through Google AdMob (Google LLC) to keep the App
+    free to play. When ads are requested (typically only when the device has
+    network connectivity), Google and its advertising partners may collect
+    or process certain information from your device, which may include:
+
+    • Advertising identifiers (for example Identifier for Advertisers / IDFA,
+      where permitted by Apple and your choices)
+    • IP address
+    • Device type, operating system version, and app version
+    • Approximate location derived from IP address (not precise GPS from us)
+    • Ad performance and interaction data (for example impressions and clicks)
+    • Diagnostic information related to ad delivery
+
+    This information is collected and processed by Google under Google’s own
+    privacy policies. We do not control how Google uses this data.
+
+    Google Privacy Policy:
+      https://policies.google.com/privacy
+    How Google uses information from sites or apps that use Google services:
+      https://policies.google.com/technologies/partner-sites
+    Google’s advertising / AdMob information:
+      https://support.google.com/admob/answer/6128543
+
+3.4 Network connectivity check
+    The App may check whether your device appears online (for example via
+    system network / connectivity status) so that ads are not requested while
+    offline. This check is used for App functionality and does not by itself
+    create an account or upload your puzzle progress to our servers.
+
+3.5 App Store rating / store links
+    The App may show an optional in-app rating prompt and may open the Apple
+    App Store listing (using Apple’s review APIs or App Store links). Apple
+    processes any rating or review you submit under Apple’s terms and privacy
+    policy. We do not receive the content of your App Store review through
+    our own servers.
+
+3.6 Information we do NOT collect on iOS (current build)
+    For the current iOS App we do not:
+
+    • Use Firebase Analytics, Crashlytics, or Firebase Cloud Messaging
+    • Require sign-in or collect account credentials
+    • Collect precise GPS location, contacts, photos, camera, microphone,
+      health, or motion fitness data for our own features
+    • Sell your personal information
+
+
+--------------------------------------------------------------------------------
+4. HOW WE USE INFORMATION
+--------------------------------------------------------------------------------
+
+Information is used only to:
+
+    • Provide gameplay (saving progress and settings on your device)
+    • Schedule optional local reminders if you allow notifications
+    • Show advertisements that help keep the App free to play
+    • Support optional features such as App Store rating prompts
+    • Respond to support requests you send us by email
+
+
+--------------------------------------------------------------------------------
+5. HOW WE SHARE INFORMATION
+--------------------------------------------------------------------------------
+
+We do not sell personal information.
+
+Data may be processed by third parties solely as needed to run the App on iOS:
+
+    • Google AdMob / Google LLC — advertising services
+    • Apple Inc. — App Store distribution, in-app review / store listing,
+      and related Apple platform services
+
+These partners process data according to their own privacy policies.
+
+
+--------------------------------------------------------------------------------
+6. APPLE PRIVACY LABELS (APP STORE CONNECT)
+--------------------------------------------------------------------------------
+
+When you publish or update ColorArrow Out on the App Store, the App Privacy
+section in App Store Connect should match this policy. Based on the current
+iOS build, typical disclosures include data collected by advertising SDKs
+(for example identifiers, usage / advertising data, and diagnostics related
+to ads), which may be used for Third-Party Advertising and may be used for
+tracking where Apple’s definition of tracking applies and where you have
+granted permission.
+
+We do not declare Firebase Analytics data collection for iOS because Firebase
+is not configured and analytics collection is disabled on iOS.
+
+If you later enable Firebase or other analytics on iOS, you must update both
+this Privacy Policy and your App Store Connect privacy answers before release.
+
+
+--------------------------------------------------------------------------------
+7. TRACKING AND APP TRACKING TRANSPARENCY (ATT)
+--------------------------------------------------------------------------------
+
+On iOS, personalized advertising that uses data to track you across other
+companies’ apps and websites may require Apple’s App Tracking Transparency
+permission, depending on how ads are configured and which identifiers are
+used.
+
+    • If the App requests tracking permission, you can Allow or Ask App Not
+      to Track.
+    • You can also change this later in iOS Settings → Privacy & Security →
+      Tracking.
+    • You can limit Ad Tracking / personalized ads using Apple’s advertising
+      settings on your device.
+
+Even if you decline tracking, non-personalized ads may still be shown so the
+App can remain free.
+
+
+--------------------------------------------------------------------------------
+8. CHILDREN'S PRIVACY
+--------------------------------------------------------------------------------
+
+ColorArrow Out is intended for a general audience. We do not knowingly collect
+personal information from children under 13 (or the equivalent minimum age in
+your country) for our own use.
+
+Advertising in the App is served by Google AdMob. Parents and guardians who
+believe a child has provided personal information through ads or related
+services should contact us at contact@appwaretech.com, and we will take
+reasonable steps to address the request with applicable partners.
+
+
+--------------------------------------------------------------------------------
+9. DATA RETENTION
+--------------------------------------------------------------------------------
+
+Local game data and settings remain on your device until you clear the App’s
+data, offload/uninstall the App, or reset progress within the App (if
+available).
+
+Local notification schedules remain on your device until you revoke
+notification permission, cancel notifications, or uninstall the App.
+
+Advertising and device data collected by Google AdMob is retained according
+to Google’s policies, not ours.
+
+
+--------------------------------------------------------------------------------
+10. YOUR CHOICES AND RIGHTS
+--------------------------------------------------------------------------------
+
+You can:
+
+    • Uninstall the App or clear App data to remove locally stored progress
+      and settings
+    • Deny or revoke notification permission in iOS Settings
+    • Limit tracking / personalized ads in iOS Settings (Privacy & Security)
+    • Contact us about data practices related to the App
+
+Depending on where you live (for example under GDPR in the EEA/UK or
+CCPA/CPRA in California), you may have additional rights regarding personal
+data. To exercise a request related to our App, email
+contact@appwaretech.com. For data held only by Google (ads) or Apple
+(App Store), you may also need to use their tools and policies.
+
+
+--------------------------------------------------------------------------------
+11. SECURITY
+--------------------------------------------------------------------------------
+
+We take reasonable steps to protect information processed in connection with
+the App. No method of electronic storage or transmission is 100% secure.
+Local data on your device is protected by your device’s security features.
+
+
+--------------------------------------------------------------------------------
+12. THIRD-PARTY LINKS AND SERVICES
+--------------------------------------------------------------------------------
+
+The App may open links or use services outside our control (for example the
+Apple App Store or ad destinations). Their privacy practices are governed by
+their own policies, not this one.
+
+
+--------------------------------------------------------------------------------
+13. INTERNATIONAL USERS
+--------------------------------------------------------------------------------
+
+The App is distributed worldwide through the Apple App Store where available.
+Advertising partners such as Google may process data in countries other than
+your country of residence, subject to their policies and applicable law.
+
+
+--------------------------------------------------------------------------------
+14. CHANGES TO THIS POLICY
+--------------------------------------------------------------------------------
+
+We may update this Privacy Policy from time to time. The "Last updated" date
+at the top will change when we do. Continued use of the App after an update
+means you accept the revised policy. For material changes, we may provide
+additional notice in the App or on the App Store product page when practical.
+
+
+--------------------------------------------------------------------------------
+15. CONTACT US
+--------------------------------------------------------------------------------
+
+If you have questions about this Privacy Policy or ColorArrow Out on iOS,
+contact us at:
+
+    Email:      contact@appwaretech.com
+    App:        ColorArrow Out (iOS)
+    Bundle ID:  com.appwaretech.ArrowPathOut
+    Publisher:  AppWare Tech
+
+================================================================================
+END OF PRIVACY POLICY — ColorArrow Out (iOS)
+================================================================================

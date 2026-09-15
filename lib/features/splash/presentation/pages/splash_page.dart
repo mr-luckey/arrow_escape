@@ -44,7 +44,7 @@ class _SplashPageState extends State<SplashPage> {
                   .fadeIn(),
               const SizedBox(height: 16),
               Text(
-                'ColorPath Out',
+                'ColorArrow Out',
                 style: Theme.of(context).textTheme.displayMedium,
               ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
               const SizedBox(height: 28),

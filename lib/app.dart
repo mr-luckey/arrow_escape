@@ -31,7 +31,7 @@ class ColorPathOutApp extends StatelessWidget {
       child: BlocBuilder<ThemeCubit, AppColorSchemeId>(
         builder: (context, scheme) {
           return MaterialApp.router(
-            title: 'ColorPath Out',
+            title: 'ColorArrow Out',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light(scheme),
             routerConfig: _router,
@@ -80,9 +80,9 @@ class _AudioLifecycleState extends State<_AudioLifecycle>
 
   Future<void> _scheduleLocalNotifications() async {
     try {
-      final count = await sl<LocalNotificationService>()
-          .scheduleNotifications()
-          .timeout(const Duration(seconds: 12));
+      // Do not hard-timeout the whole flow — iOS permission dialog waits
+      // for the user and can take longer than a few seconds.
+      final count = await sl<LocalNotificationService>().scheduleNotifications();
       unawaited(
         sl<AnalyticsService>().logNotificationScheduled(
           count: count,

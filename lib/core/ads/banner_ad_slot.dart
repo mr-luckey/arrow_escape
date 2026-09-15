@@ -7,11 +7,14 @@ import '../di/injection.dart';
 import '../network/network_guard.dart';
 import 'ads_service.dart';
 
-/// Standard AdMob anchored adaptive banner for [Scaffold.bottomNavigationBar].
+/// Bottom-anchored AdMob banner for [Scaffold.bottomNavigationBar].
 ///
-/// Critical: the root must be a fixed-height box. An expanding [Align] /
-/// [Center] inside bottomNavigationBar steals the whole screen and makes
-/// the body disappear.
+/// Uses **standard** anchored adaptive sizing (full width, ~50–90dp) — the
+/// classic phone banner height from AdMob Flutter/iOS docs. Avoids the
+/// plugin's newer "large" adaptive API which can reserve up to ~150dp.
+///
+/// Root must be a fixed-height box so bottomNavigationBar cannot expand
+/// and steal the scaffold body.
 class BannerAdSlot extends StatefulWidget {
   const BannerAdSlot({
     super.key,
@@ -81,7 +84,13 @@ class _BannerAdSlotState extends State<BannerAdSlot> {
     if (widget.size != null) return widget.size;
     final width = MediaQuery.sizeOf(context).width.truncate();
     if (width <= 0) return null;
-    return AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
+
+    // Intentionally NOT getLargeAnchoredAdaptiveBannerAdSize (50–150dp / ≤20%).
+    // Standard anchored adaptive: full width, height 50–90dp / ≤15% of screen.
+    // Still the correct native channel on iOS/Android; plugin only marked it
+    // deprecated to push the taller "large" format.
+    // ignore: deprecated_member_use
+    return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
   }
 
   Future<void> _load({bool force = false}) async {
@@ -149,22 +158,18 @@ class _BannerAdSlotState extends State<BannerAdSlot> {
       return const SizedBox.shrink();
     }
 
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
     final adHeight = ad.size.height.toDouble();
     final adWidth = ad.size.width.toDouble();
 
-    // Fixed total height only — never let this expand into the body.
+    // Flush to the physical bottom — no safe-area gap under the banner.
     return SizedBox(
       width: double.infinity,
-      height: adHeight + bottomInset,
-      child: Padding(
-        padding: EdgeInsets.only(bottom: bottomInset),
-        child: Center(
-          child: SizedBox(
-            width: adWidth,
-            height: adHeight,
-            child: AdWidget(ad: ad),
-          ),
+      height: adHeight,
+      child: Center(
+        child: SizedBox(
+          width: adWidth,
+          height: adHeight,
+          child: AdWidget(ad: ad),
         ),
       ),
     );

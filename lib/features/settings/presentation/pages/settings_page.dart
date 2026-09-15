@@ -72,18 +72,6 @@ class SettingsPage extends StatelessWidget {
                                       .toggleMusic(),
                                 ),
                               ),
-                              _Tile(
-                                title: 'Haptics',
-                                subtitle:
-                                    'Vibration on taps & mistakes (test pulse when ON)',
-                                trailing: Switch(
-                                  value: state.hapticsEnabled,
-                                  activeThumbColor: colors.secondary,
-                                  onChanged: (_) => context
-                                      .read<SettingsCubit>()
-                                      .toggleHaptics(),
-                                ),
-                              ),
                             ],
                           );
                         },

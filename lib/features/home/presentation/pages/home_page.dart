@@ -64,6 +64,14 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: [
                 const Spacer(flex: 2),
+                const AppBrandLogo(size: 108)
+                    .animate()
+                    .fadeIn(duration: 420.ms)
+                    .scale(
+                      begin: const Offset(0.86, 0.86),
+                      curve: Curves.easeOutBack,
+                    ),
+                const SizedBox(height: 14),
                 _HomeTitle()
                     .animate()
                     .fadeIn(duration: 480.ms)
@@ -216,11 +224,11 @@ class _HomeTitle extends StatelessWidget {
         TextSpan(
           children: [
             TextSpan(
-              text: 'Arrow',
+              text: 'Color',
               style: base?.copyWith(color: c.primary),
             ),
             TextSpan(
-              text: ' Path ',
+              text: 'Arrow ',
               style: base?.copyWith(color: c.onSurface),
             ),
             TextSpan(

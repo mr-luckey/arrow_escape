@@ -23,6 +23,7 @@ enum NotificationRotationMode { alternate, sequential }
 class NotificationConfig {
   const NotificationConfig({
     this.enabled = true,
+
     /// `true`  → only the short test burst (for QA).
     /// `false` → only production daily 17:00 / 21:00 (no test alerts).
     this.testMode = false,
@@ -33,7 +34,7 @@ class NotificationConfig {
     this.rotationMode = NotificationRotationMode.alternate,
     this.daysToSchedule = 14,
     this.androidChannelId = 'daily_local',
-    this.androidChannelName = 'ArrowPath reminders',
+    this.androidChannelName = 'ColorArrow Out reminders',
   });
 
   final bool enabled;

@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 // Production AdMob App ID (must match publisher of production ad unit IDs).
-val productionAdMobAppId = "ca-app-pub-6619866004331477~3888523505"
+val productionAdMobAppId = "ca-app-pub-6497605679911497~7575281768"
 
 android {
     namespace = "com.appwaretech.colorpathout"

@@ -9,7 +9,7 @@ class SettingsState extends Equatable {
   const SettingsState({
     this.soundEnabled = true,
     this.musicEnabled = true,
-    this.hapticsEnabled = true,
+    this.hapticsEnabled = false,
   });
 
   final bool soundEnabled;
@@ -37,8 +37,8 @@ class SettingsCubit extends Cubit<SettingsState> {
       : super(SettingsState(
           soundEnabled: _prefs.getBool(_soundKey) ?? true,
           musicEnabled: _prefs.getBool(_musicKey) ?? true,
-          // Default ON; rebuild if a previous session left it off accidentally.
-          hapticsEnabled: _prefs.getBool(_hapticsKey) ?? true,
+          // Vibration disabled app-wide; keep preference for future re-enable.
+          hapticsEnabled: false,
         )) {
     _audio.applySettings(
       musicEnabled: state.musicEnabled,

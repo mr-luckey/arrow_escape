@@ -22,6 +22,9 @@ class AppStoreService {
   static const _kRatedOrDeclined = 'store_rated_or_declined';
   static const _kNeverAsk = 'store_never_ask_rate';
 
+  /// App Store Connect numeric Apple ID (ColorPath Out).
+  static const appleAppStoreId = '6812360593';
+
   /// Minimum launches before a rate card can appear.
   static const minLaunchesBeforeRate = 3;
 
@@ -122,21 +125,37 @@ class AppStoreService {
     await _prefs.setBool(_kNeverAsk, true);
   }
 
-  /// Opens the native in-app review sheet, or Play Store listing as fallback.
+  /// Opens the store listing so the user can rate the app.
+  /// iOS → App Store (`appleAppStoreId`); Android → Play Store.
   Future<void> requestReviewOrOpenStore() async {
     await markRated();
-    try {
-      if (await _inAppReview.isAvailable()) {
-        await _inAppReview.requestReview();
-        return;
-      }
-    } catch (e, st) {
-      debugPrint('In-app review failed: $e\n$st');
-    }
     await openStoreListing();
   }
 
   Future<void> openStoreListing() async {
+    if (!kIsWeb && Platform.isIOS) {
+      try {
+        await _inAppReview.openStoreListing(appStoreId: appleAppStoreId);
+        return;
+      } catch (e, st) {
+        debugPrint('openStoreListing (iOS helper) failed: $e\n$st');
+      }
+      final itms = Uri.parse(
+        'itms-apps://apps.apple.com/app/id$appleAppStoreId',
+      );
+      final https = Uri.parse(
+        'https://apps.apple.com/app/id$appleAppStoreId',
+      );
+      try {
+        if (await canLaunchUrl(itms)) {
+          await launchUrl(itms, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } catch (_) {}
+      await launchUrl(https, mode: LaunchMode.externalApplication);
+      return;
+    }
+
     final info = await PackageInfo.fromPlatform();
     final packageName = info.packageName;
     final market = Uri.parse('market://details?id=$packageName');
